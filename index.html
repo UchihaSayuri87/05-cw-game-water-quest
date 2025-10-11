@@ -8,15 +8,44 @@
 </head>
 <body>
   <div class="container">
+    <!-- Start screen overlay: visible before play, accessible dialog -->
+    <div id="start-screen" class="overlay start-screen" role="dialog" aria-modal="true" aria-labelledby="start-title">
+      <div class="panel">
+        <h2 id="start-title">Water Quest</h2>
+        <p class="lead">Collect clean water cans to support the mission — quick reflexes win!</p>
+        <p class="small">Goal: <strong id="goal-cans-inline">25</strong> · Time: <strong id="time-inline">30s</strong> · Penalty: <strong id="penalty-inline">2s</strong></p>
+        <button id="start-overlay-btn" class="large">Start Game</button>
+      </div>
+    </div>
+
     <h1>Water Quest</h1>
-    <p class="game-instructions">Collect 20 items to complete the game!</p>
+    <p class="brand-note">Branding reference used — students should reference charity: water’s mission when describing the project (see instructor resources).</p>
+    <p class="game-instructions">Collect 25 items to complete the game!</p>
     <div class="stats">
       <p>Cans Collected: <span id="current-cans">0</span></p>
       <p>Time Left: <span id="timer">30</span>s</p>
     </div>
-    <div id="achievements" class="achievement"></div>
+    <!-- Progress bar (visual wireframe of progress toward goal) -->
+    <div class="progress" aria-hidden="true">
+      <div id="progress-fill" class="progress-fill" style="width:0%"></div>
+    </div>
+    <div class="game-params">
+      <p>Goal: <span id="goal-cans">25</span></p>
+      <p>Points per can: <span id="points-per-can">1</span></p>
+      <p>Miss penalty: <span id="penalty-seconds">2</span>s</p>
+    </div>
+    <div id="achievements" class="achievement" role="status" aria-live="polite"></div>
     <div class="game-grid"></div>
     <button id="start-game">Start Game</button>
+
+    <!-- End screen overlay: shows final message and replay -->
+    <div id="end-screen" class="overlay end-screen" role="dialog" aria-modal="true" hidden>
+      <div class="panel">
+        <h2 id="end-title">Game Over</h2>
+        <p id="end-message">You collected 0 / 25 cans.</p>
+        <button id="replay-btn" class="large">Play Again</button>
+      </div>
+    </div>
   </div>
   <script src="script.js"></script>
 </body>

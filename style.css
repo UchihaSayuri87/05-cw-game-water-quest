@@ -44,7 +44,7 @@ h1 {
   font-size: 30px;
   font-weight: bold;
   margin-bottom: 20px;
-  color: #333;
+  color: #2E9DF7; /* brand blue */
 }
 
 h1 img {
@@ -96,6 +96,8 @@ h1 img {
   overflow: hidden;
 }
 
+.grid-cell:hover { background-color: #e0f3ff; transform: translateY(-2px); transition: transform 120ms, background-color 120ms; }
+
 .water-can-wrapper {
   position: absolute;
   top: 50%;
@@ -128,9 +130,25 @@ h1 img {
   }
 }
 
+/* Small branding/attribution note for students */
+.brand-note {
+  text-align: center;
+  font-size: 13px;
+  color: #666;
+  margin-bottom: 8px;
+}
+
+/* Achievement / status messages */
+.achievement {
+  text-align: center;
+  margin: 12px auto;
+  min-height: 28px;
+  font-weight: 600;
+  color: #159A48; /* dark green for success messages */
+}
 
 button {
-  background-color: #4CAF50;
+  background-color: #2E9DF7; /* charity: water blue */
   color: white;
   border: none;
   padding: 12px 24px;
@@ -140,4 +158,55 @@ button {
   display: block;
   margin: 30px auto 0;
   transition: background-color 0.2s;
+}
+
+button:hover {
+  background-color: #1e88d9;
+}
+
+/* Overlay / start + end screens */
+.overlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0,0,0,0.45);
+  z-index: 40;
+}
+.overlay .panel {
+  background: white;
+  padding: 28px;
+  border-radius: 10px;
+  text-align: center;
+  min-width: 280px;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.2);
+}
+.overlay h2 { margin: 0 0 8px; color: #2E9DF7; }
+.overlay .lead { margin-bottom: 8px; color: #333; }
+.overlay .small { font-size: 13px; color: #666; margin-bottom: 16px; }
+.overlay .large {
+  background: #2E9DF7;
+  color: #fff;
+  padding: 10px 18px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+}
+.overlay[hidden] { display: none; }
+
+/* Progress bar under stats to show goal progress */
+.progress {
+  max-width: 500px;
+  height: 10px;
+  background: #eaeef6;
+  border-radius: 8px;
+  margin: 14px auto;
+  overflow: hidden;
+}
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg,#2E9DF7,#8BD1CB);
+  width: 0%;
+  transition: width 300ms ease;
 }
