@@ -1,52 +1,68 @@
-<!DOCTYPE html>
-<html>
+<!doctype html>
+<html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width">
-  <title>Water Quest</title>
-  <link href="style.css" rel="stylesheet" type="text/css" />
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width,initial-scale=1" />
+	<title>Water Drop — Water Quest</title>
+	<link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-  <div class="container">
-    <!-- Start screen overlay: visible before play, accessible dialog -->
-    <div id="start-screen" class="overlay start-screen" role="dialog" aria-modal="true" aria-labelledby="start-title">
-      <div class="panel">
-        <h2 id="start-title">Water Quest</h2>
-        <p class="lead">Collect clean water cans to support the mission — quick reflexes win!</p>
-        <p class="small">Goal: <strong id="goal-cans-inline">25</strong> · Time: <strong id="time-inline">30s</strong> · Penalty: <strong id="penalty-inline">2s</strong></p>
-        <button id="start-overlay-btn" class="large">Start Game</button>
-      </div>
-    </div>
+	<header class="site-header">
+		<!-- external logo with onerror fallback that toggles CSS class on the root element -->
+		<img id="logoImg" src="img/logo.png" alt="charity: water logo" class="logo"
+		     onerror="document.documentElement.classList.add('logo-broken'); this.style.display='none';" />
+		<!-- inline SVG fallback (hidden by default via CSS, shown when .logo-broken is present) -->
+		<svg class="logo-svg" viewBox="0 0 64 64" role="img" aria-label="Water Drop logo" xmlns="http://www.w3.org/2000/svg" focusable="false" aria-hidden="true">
+			<circle cx="32" cy="32" r="30" fill="#ffffff" opacity="0.02"></circle>
+			<path d="M32 10c6 8 12 14 12 22 0 6.6-5.4 12-12 12s-12-5.4-12-12c0-8 6-14 12-22z" fill="#2E9DF7"></path>
+			<circle cx="44" cy="18" r="4" fill="#FFC907"></circle>
+		</svg>
 
-    <h1>Water Quest</h1>
-    <p class="brand-note">Branding reference used — students should reference charity: water’s mission when describing the project (see instructor resources).</p>
-    <p class="game-instructions">Collect 25 items to complete the game!</p>
-    <div class="stats">
-      <p>Cans Collected: <span id="current-cans">0</span></p>
-      <p>Time Left: <span id="timer">30</span>s</p>
-    </div>
-    <!-- Progress bar (visual wireframe of progress toward goal) -->
-    <div class="progress" aria-hidden="true">
-      <div id="progress-fill" class="progress-fill" style="width:0%"></div>
-    </div>
-    <div class="game-params">
-      <p>Goal: <span id="goal-cans">25</span></p>
-      <p>Points per can: <span id="points-per-can">1</span></p>
-      <p>Miss penalty: <span id="penalty-seconds">2</span>s</p>
-    </div>
-    <div id="achievements" class="achievement" role="status" aria-live="polite"></div>
-    <div class="game-grid"></div>
-    <button id="start-game">Start Game</button>
+		<div class="title-block">
+			<h1>Water Drop</h1>
+			<p class="tagline">Tap clean drops, avoid dirty ones — save as many as you can!</p>
+		</div>
+	</header>
 
-    <!-- End screen overlay: shows final message and replay -->
-    <div id="end-screen" class="overlay end-screen" role="dialog" aria-modal="true" hidden>
-      <div class="panel">
-        <h2 id="end-title">Game Over</h2>
-        <p id="end-message">You collected 0 / 25 cans.</p>
-        <button id="replay-btn" class="large">Play Again</button>
-      </div>
-    </div>
-  </div>
-  <script src="script.js"></script>
+	<main class="game-wrap">
+		<section class="hud">
+			<div class="score">Score: <span id="score">0</span></div>
+			<div class="timer">Time: <span id="time">30</span>s</div>
+			<button id="startBtn" class="start-btn">Start Game</button>
+		</section>
+
+		<section id="gameField" class="game-field" aria-live="polite">
+			<!-- whack-a-mole 3x3 grid -->
+			<div class="game-grid" id="gameGrid" aria-hidden="false">
+				<!-- cells will be populated by JS; keeping static markup so CSS anchors exist -->
+				<div class="grid-cell" data-index="0"></div>
+				<div class="grid-cell" data-index="1"></div>
+				<div class="grid-cell" data-index="2"></div>
+				<div class="grid-cell" data-index="3"></div>
+				<div class="grid-cell" data-index="4"></div>
+				<div class="grid-cell" data-index="5"></div>
+				<div class="grid-cell" data-index="6"></div>
+				<div class="grid-cell" data-index="7"></div>
+				<div class="grid-cell" data-index="8"></div>
+			</div>
+
+			<div id="achievement" class="achievement" aria-live="polite"></div>
+
+			<div class="progress" aria-hidden="true">
+				<div id="progress-fill" class="progress-fill" style="width:0%"></div>
+			</div>
+		</section>
+	</main>
+
+	<div id="overlay" class="overlay hidden" role="dialog" aria-modal="true">
+		<div class="overlay-content">
+			<h2 id="resultTitle">Time's up!</h2>
+			<p id="resultMessage"></p>
+			<p class="final-score">Final score: <span id="finalScore">0</span></p>
+			<button id="replayBtn" class="start-btn">Play again</button>
+		</div>
+	</div>
+
+	<script src="script.js"></script>
 </body>
 </html>

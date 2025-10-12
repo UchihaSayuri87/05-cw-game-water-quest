@@ -1,0 +1,241 @@
+/* Merged stylesheet: combines brand palette, layout, HUD, grid, drops, and overlays. */
+
+/* Brand colors and variables */
+:root{
+  --cw-yellow: #FFC907;
+  --cw-blue: #2E9DF7;
+  --cw-light-blue: #8BD1CB;
+  --cw-green: #4FCB53;
+  --cw-orange: #FF902A;
+  --cw-red: #F5402C;
+  --cw-dark-green: #159A48;
+  --cw-dark: #073b4c;
+  --bg: #f7fbfd;
+  --bad: #6b4f3f; /* dirty water */
+}
+
+*{ box-sizing:border-box; }
+
+body{
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+  margin:0;
+  padding:30px;
+  background: linear-gradient(180deg, var(--bg) 0%, #eaf6ff 100%);
+  color:var(--cw-dark);
+  min-height:100vh;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+}
+
+/* Page container (kept from earlier layout) */
+.container {
+  max-width: 980px;
+  margin: 50px auto;
+  background-color: #fff;
+  padding: 24px;
+  border-radius: 10px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+}
+
+/* Header / branding */
+.site-header{
+  display:flex;
+  align-items:center;
+  gap:1rem;
+  width:100%;
+  max-width:980px;
+}
+.logo{ height:56px; width:auto; display:block; flex-shrink:0; }
+.title-block h1{ margin:0; font-size:1.5rem; color:var(--cw-dark); }
+.tagline{ margin:0; color:#06638b; font-size:0.95rem; }
+
+/* Basic headings */
+h1 { text-align:center; font-size:30px; font-weight:bold; color:var(--cw-blue); margin:0 0 8px 0; }
+
+/* HUD and controls */
+.game-wrap{ width:100%; max-width:980px; margin-top:1rem; }
+.hud{ display:flex; gap:1rem; align-items:center; justify-content:space-between; width:100%; }
+.score, .timer{
+  background:#fff; padding:0.6rem 0.9rem; border-radius:8px; box-shadow:0 2px 6px rgba(3,3,3,0.07);
+  font-weight:600;
+}
+.start-btn, button{
+  background: linear-gradient(180deg, var(--cw-yellow), #f4c542);
+  border: none; padding:0.6rem 1rem; border-radius:10px; font-weight:600; cursor:pointer;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+  color: #072b3a;
+}
+.start-btn:hover, button:hover{ filter:brightness(0.98); }
+
+/* Game field (drop area) */
+.game-field{
+  position:relative;
+  height:60vh;
+  min-height:360px;
+  margin-top:1rem;
+  background: linear-gradient(180deg, rgba(46,157,247,0.04), rgba(46,157,247,0.01));
+  border-radius:12px;
+  overflow:hidden;
+  border: 2px solid rgba(46,157,247,0.08);
+  padding: 12px; /* added padding so drops don't start flush to the edge */
+}
+
+/* Game grid / legacy grid cells (from previous version) */
+.game-grid{
+  display:grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap:12px;
+  max-width:520px;
+  margin:6px auto;
+  padding:6px;
+}
+.grid-cell{
+  background: linear-gradient(180deg,#ffffff,#f4fbff);
+  border-radius:10px;
+  aspect-ratio:1;
+  position:relative;
+  overflow:hidden;
+  box-shadow: 0 4px 10px rgba(2,8,20,0.06);
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;transition:background-color 0.3s;
+}
+
+/* popped can wrapper centers inside the cell */
+.grid-cell .water-can-wrapper{
+  position: absolute;
+  left: 50%;
+  top: 62%;
+  transform: translate(-50%, 100%) scale(0.75);
+  transition: transform 220ms cubic-bezier(.2,.9,.2,1);
+  pointer-events: none; /* clicks go to inner .water-can */
+}
+.grid-cell .water-can{
+  width: 64px;
+  height: 64px;
+  pointer-events: auto;
+  transform-origin: center;
+}
+
+/* Use a 'pop' modifier when the can is visible */
+.grid-cell.pop .water-can-wrapper{
+  transform: translate(-50%, 0%) scale(1);
+}
+
+/* obstacle (dirty can) visual — show a clear black silhouette so players can avoid it */
+.grid-cell .water-can.obstacle {
+  /* force the jerry-can image to render as a solid black silhouette */
+  filter: brightness(0) saturate(100%) contrast(120%);
+  background-blend-mode: normal;
+  /* ensure silhouette stands out against cell */
+  box-shadow: 0 6px 12px rgba(0,0,0,0.35);
+  border: 2px solid rgba(0,0,0,0.08);
+}
+
+/* slightly reduce opacity on normal state to emphasize silhouette contrast */
+.grid-cell .water-can {
+  transition: filter 140ms ease, transform 120ms ease, opacity 120ms ease;
+}
+
+/* small tap feedback */
+.water-can.tap-effect {
+  transform: scale(0.86) !important;
+  opacity: 0.95;
+}
+
+/* water-can: use external image file for branding asset */
+.water-can{
+  width:100%; height:100%;
+  background-image: url('img/water-can.png');
+  background-size: cover;
+  background-repeat:no-repeat;
+  background-position:center;
+  cursor:pointer; border-radius:50%;
+  animation: popUp 0.5s cubic-bezier(0.17,0.67,0.34,2);
+  transform-origin:center;
+}
+@keyframes popUp{ 0%{ transform:scale(0.5); } 100%{ transform:scale(1); } }
+
+/* Drops (falling items) */
+.drop, .bad-drop{
+  position:absolute; top:-60px;
+  width:44px; height:60px; border-radius:50% 50% 45% 45%;
+  background:var(--cw-blue);
+  box-shadow: inset -6px -10px 20px rgba(255,255,255,0.12);
+  display:flex; justify-content:center; align-items:center; cursor:pointer; user-select:none;
+  animation-name:fall; animation-timing-function: linear;
+}
+.drop::after{
+  content:''; position:absolute; width:10px; height:10px; border-radius:50%;
+  background:rgba(255,255,255,0.7); right:10px; top:8px; transform:rotate(20deg);
+}
+.bad-drop{ background:var(--bad); box-shadow: inset -6px -10px 14px rgba(255,255,255,0.05); }
+.drop.tap-effect, .bad-drop.tap-effect{ transform:scale(0.85); opacity:0.9; }
+
+@keyframes fall{ to{ transform: translateY(120vh); } }
+
+/* Small branding/attribution note */
+.brand-note{ text-align:center; font-size:13px; color:#666; margin-bottom:8px; }
+
+/* Achievement / status messages */
+.achievement{
+  text-align:center; margin:12px auto; min-height:28px; font-weight:600; color:var(--cw-dark-green);
+  font-weight:700;
+  color: var(--cw-blue);
+  min-height: 28px;
+  margin-top: 10px;
+}
+
+/* Overlay / start + end screens */
+.overlay{ position:fixed; inset:0; display:flex; align-items:center; justify-content:center; background:rgba(0,0,0,0.45); z-index:40; }
+.overlay .panel, .overlay-content{ background:white; padding:20px 28px; border-radius:10px; text-align:center; min-width:280px; box-shadow:0 8px 30px rgba(0,0,0,0.18); }
+.overlay h2, .overlay-content h2{ margin:0 0 8px; color:var(--cw-blue); }
+.overlay .lead{ margin-bottom:8px; color:#333; }
+.overlay .large{ background:var(--cw-blue); color:#fff; padding:10px 18px; border-radius:8px; border:none; cursor:pointer; }
+
+/* overlay content padding so text/buttons have space */
+.overlay .overlay-content, .overlay .panel {
+  padding: 24px; /* increased padding */
+}
+
+/* Ensure both attribute-based and class-based hiding work
+   (some scripts use setAttribute('hidden') and some toggle the 'hidden' class) */
+.overlay[hidden] { display: none; }
+.overlay.hidden { display: none; }
+
+/* Generic utility used by script toggles */
+.hidden { display: none !important; }
+
+/* Progress bar under stats to show goal progress */
+.progress{ max-width:500px; height:10px; background:#eaeef6; border-radius:8px; margin:14px auto; overflow:hidden; }
+.progress-fill{ height:100%; background: linear-gradient(90deg,var(--cw-blue),var(--cw-light-blue)); width:0%; transition:width 300ms ease; }
+
+/* Responsive tweaks */
+@media (max-width:640px){
+  .site-header{ flex-direction:column; align-items:flex-start; }
+  .hud{ flex-direction:column; align-items:flex-start; gap:0.6rem; }
+  .drop, .bad-drop{ width:36px; height:48px; }
+  body{ padding:16px; }
+}
+
+/* logo SVG fallback rules: show inline SVG when the external image failed to load */
+.logo-svg { display: none; }
+.logo-broken .logo { display: none; }
+.logo-broken .logo-svg { display: block; height:56px; width:auto; }
+
+/* If JS detects missing water-can asset, it adds .use-inline-can to html/documentElement.
+   This rule provides an embedded SVG fallback for .water-can background. */
+.use-inline-can .water-can {
+  /* embedded simple can illustration (colors use brand blue/yellow) */
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect x='12' y='18' width='40' height='30' rx='6' fill='%232E9DF7'/><rect x='18' y='8' width='6' height='10' rx='2' fill='%23FFC907'/><circle cx='44' cy='12' r='6' fill='%23FFC907'/></svg>");
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+/* show a black silhouette of the jerry-can image when applied */
+.water-can.silhouette {
+  /* make the image render as a solid black silhouette while preserving transparency */
+  filter: brightness(0) saturate(100%) contrast(120%);
+  transition: filter 140ms ease, transform 120ms ease, opacity 120ms ease;
+}
