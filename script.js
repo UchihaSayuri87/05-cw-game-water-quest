@@ -44,6 +44,8 @@ let running = false;
 let popTimer = null;
 let countdownTimer = null;
 let lastIndex = -1;
+let scorePulseTimer = null; // <-- added: timer for score pulse
+let peakScore = 0; // <-- added: track highest score achieved during a run
 
 // helpers
 function randInt(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
@@ -64,6 +66,15 @@ function updateHUD() {
 	// progress toward WIN_THRESHOLD
 	const pct = Math.min(100, Math.round((score / WIN_THRESHOLD) * 100));
 	if (progressFill) progressFill.style.width = pct + '%';
+
+	// pulse the score when it changes
+	if (scoreEl) {
+		scoreEl.classList.add('updated');
+		clearTimeout(scorePulseTimer);
+		scorePulseTimer = setTimeout(() => {
+			scoreEl.classList.remove('updated');
+		}, 360);
+	}
 }
 
 function clearAllPops() {
@@ -133,7 +144,7 @@ function popRandom() {
 	// defensive: ensure grid reference
 	const cells = Array.from((grid || document.getElementById('gameGrid') || document.querySelector('.game-grid')).querySelectorAll('.grid-cell'));
 	if (!cells.length) {
-		console.warn('popRandom: no grid cells found');
+		// no explicit console output — silent fail handled upstream
 		return;
 	}
 	// pick an index different from lastIndex to avoid same cell twice
@@ -142,8 +153,6 @@ function popRandom() {
 	lastIndex = idx;
 	const cell = cells[idx];
 	const isBad = Math.random() < BAD_CHANCE;
-
-	// removed debug console.log
 
 	// ensure cell is cleared
 	cell.innerHTML = '';
@@ -184,6 +193,8 @@ function popRandom() {
 				if (wrapper) wrapper.remove();
 			}, 120);
 			score += 1;
+			// update peak score when incrementing
+			peakScore = Math.max(peakScore, score);
 			// milestone feedback
 			if (milestones[score]) showAchievement(milestones[score]);
 			else showAchievement('+1');
@@ -233,42 +244,63 @@ function showAchievement(text, ms = 1200) {
 
 function startGame() {
 	if (running) return;
-	// reset
-	score = 0;
-	timeLeft = GAME_TIME;
-	running = true;
-	overlay.classList.add('hidden');
-	updateHUD();
-	clearAllPops();
+	try {
+		// stop visual effects
+		stopConfetti();
 
-	// defensive: if grid cells are missing, create them
-	const gridEl = grid || document.getElementById('gameGrid') || document.querySelector('.game-grid');
-	if (gridEl && gridEl.querySelectorAll('.grid-cell').length === 0) {
-		for (let i = 0; i < 9; i++) {
-			const cell = document.createElement('div');
-			cell.className = 'grid-cell';
-			cell.dataset.index = i;
-			gridEl.appendChild(cell);
+		// clear any scheduled pops/countdowns
+		clearTimeout(popTimer); popTimer = null;
+		clearInterval(countdownTimer); countdownTimer = null;
+
+		// reset state
+		score = 0;
+		timeLeft = GAME_TIME;
+		running = true;
+
+		// reset peak score tracker
+		peakScore = 0;
+
+		// hide overlay/banner and reset UI
+		overlay.classList.add('hidden');
+		const bannerWrap = document.querySelector('.banner-wrapper');
+		if (bannerWrap) bannerWrap.classList.add('hidden');
+
+		updateHUD();
+		clearAllPops();
+
+		// ensure grid exists
+		const gridEl = grid || document.getElementById('gameGrid') || document.querySelector('.game-grid');
+		if (gridEl && gridEl.querySelectorAll('.grid-cell').length === 0) {
+			for (let i = 0; i < 9; i++) {
+				const cell = document.createElement('div');
+				cell.className = 'grid-cell';
+				cell.dataset.index = i;
+				gridEl.appendChild(cell);
+			}
 		}
+
+		// start timers and first pop
+		startCountdown();
+		popRandom();
+		scheduleNextPop();
+		showAchievement('Game started — tap the yellow cans!', 1000);
+	} catch (err) {
+		// avoid logging to console in production; fail silently but reset running flag
+		running = false;
 	}
-
-	startCountdown();
-	clearTimeout(popTimer);
-
-	// immediate pop so player sees a can right after pressing Start
-	popRandom();
-
-	// then continue scheduling
-	scheduleNextPop();
-	showAchievement('Game started — tap the yellow cans!', 1000);
 }
 
+// --- Unified endGame (no leaderboard side-effects here) ---
 function endGame() {
-	if (!running) return;
+	// stop running state and timers
 	running = false;
 	clearTimeout(popTimer); popTimer = null;
 	clearInterval(countdownTimer); countdownTimer = null;
+
+	// clear visible pops
 	clearAllPops();
+
+	// show results
 	finalScore.textContent = score;
 	const isWin = score >= WIN_THRESHOLD;
 	const pool = isWin ? winMessages : loseMessages;
@@ -276,80 +308,188 @@ function endGame() {
 	resultTitle.textContent = isWin ? 'You win!' : 'Try again';
 	resultMessage.textContent = msg;
 	overlay.classList.remove('hidden');
+
+	// confetti for notable achievements:
+	// only launch if player reached at least 10 during play (peakScore) AND still has >=10 final points
+	if (peakScore >= 10 && score >= 10) {
+		setTimeout(() => launchConfettiBurst(140), 220);
+	}
 }
 
+// --- Added reset helper (was missing) ---
 function resetGame() {
 	// stop timers and scheduled pops
 	clearTimeout(popTimer); popTimer = null;
 	clearInterval(countdownTimer); countdownTimer = null;
 
+	// stop confetti
+	try { stopConfetti(); } catch (e) { /* ignore */ }
+
 	// mark not running
 	running = false;
 
-	// clear any visible cans and reset HUD
-	clearAllPops();
+	// clear visible cans and reset HUD
+	try { clearAllPops(); } catch (e) { /* ignore */ }
 	score = 0;
 	timeLeft = GAME_TIME;
 	updateHUD();
 
 	// hide overlay if visible
-	overlay.classList.add('hidden');
+	if (overlay) overlay.classList.add('hidden');
 
-	// brief feedback
-	showAchievement('Game reset', 1000);
+	// remove focus from any interactive banner/button so hiding won't trap focus
+	if (document.activeElement && document.activeElement instanceof HTMLElement) {
+		document.activeElement.blur();
+	}
 }
 
-// /* Check if branding assets exist; if not, enable CSS fallbacks.
-   // detect both img/water-can.png and img/dirty-can.png and add classes:
-	 // - no-water-can (missing water-can)
-	 // - no-dirty-can (missing dirty-can)
-   // (logo image still uses inline onerror handler)
-// */
-(function checkBrandImages() {
-  try {
-    const html = document.documentElement;
+// --- Improved hideBanner: blur focused element inside banner before hiding (fixes aria-hidden+focus) ---
+function hideBanner() {
+	const bannerWrap = document.querySelector('.banner-wrapper');
+	if (!bannerWrap) return;
+	// if focus is inside the banner, blur it first to avoid aria-hidden/focus conflicts
+	const active = document.activeElement;
+	if (active && bannerWrap.contains(active) && typeof active.blur === 'function') {
+		active.blur();
+	}
+	bannerWrap.classList.add('hidden');
+}
 
-    const testOne = (src, className) => {
-      const img = new Image();
-      img.onload = () => { /* exists */ };
-      img.onerror = () => { html.classList.add(className); };
-      img.src = src;
-    };
-
-    testOne('img/water-can.png', 'no-water-can');
-    testOne('img/dirty-can.png', 'no-dirty-can');
-
-    // defensive logo handling (keeps previous behavior)
-    const logoEl = document.getElementById('logoImg');
-    if (!logoEl) {
-      html.classList.add('logo-broken');
-    } else {
-      logoEl.addEventListener('error', () => html.classList.add('logo-broken'));
-    }
-  } catch (e) {
-    // ignore
-  }
-})();
-
-// wire UI
-// (startBtn listener removed — hero PLAY triggers startGame)
+// --- Consolidated UI wiring (single listeners, no duplicates) ---
+// replay: hide overlay and start
 replayBtn?.addEventListener('click', () => {
 	overlay.classList.add('hidden');
-	setTimeout(startGame, 180);
+	hideBanner();
+	setTimeout(startGame, 140);
 });
-resetBtn?.addEventListener('click', resetGame);
+
+// reset: use the new resetGame implementation
+resetBtn?.addEventListener('click', () => {
+	resetGame();
+});
+
+// keyboard: Space to start when not running
 document.addEventListener('keydown', (e) => {
 	if (e.code === 'Space' && !running) {
 		e.preventDefault();
+		hideBanner();
 		startGame();
 	}
 });
 
-// banner Play button starts the game (already wired)
-document.getElementById('bannerPlay')?.addEventListener('click', () => {
-  document.querySelector('.banner-wrapper')?.classList.add('hidden');
-  startGame();
+// banner fallback PLAY button and banner image both start the game
+document.getElementById('bannerPlay')?.addEventListener('click', (e) => {
+	e?.preventDefault();
+	hideBanner();
+	startGame();
 });
+document.getElementById('topBanner')?.addEventListener('click', (e) => {
+	const el = e.currentTarget;
+	if (!el) return;
+	const style = window.getComputedStyle(el);
+	if (style && (style.display === 'none' || style.visibility === 'hidden' || el.hasAttribute('hidden'))) return;
+	e.preventDefault();
+	hideBanner();
+	startGame();
+});
+
+// --- Full confetti implementation (replaces stubs) ---
+let _confettiCanvas = null;
+let _confettiCtx = null;
+let _confettiParticles = [];
+let _confettiAnim = null;
+
+function _createConfettiCanvas() {
+	if (_confettiCanvas) return;
+	_confettiCanvas = document.createElement('canvas');
+	_confettiCanvas.className = 'confetti-canvas';
+	_confettiCanvas.style.position = 'fixed';
+	_confettiCanvas.style.inset = '0';
+	_confettiCanvas.style.pointerEvents = 'none';
+	_confettiCanvas.style.zIndex = '60';
+	document.body.appendChild(_confettiCanvas);
+	_confettiCtx = _confettiCanvas.getContext('2d');
+	function resize() {
+		_confettiCanvas.width = window.innerWidth;
+		_confettiCanvas.height = window.innerHeight;
+	}
+	resize();
+	window.addEventListener('resize', resize);
+}
+
+function _spawnConfetti(count = 80) {
+	if (!_confettiCtx) _createConfettiCanvas();
+	const colors = ['#FFC907','#2E9DF7','#8BD1CB','#4FCB53','#072b3a'];
+	for (let i = 0; i < count; i++) {
+		_confettiParticles.push({
+			x: Math.random() * _confettiCanvas.width,
+			y: -10 - Math.random() * 300,
+			vx: (Math.random() - 0.5) * 8,
+			vy: 2 + Math.random() * 6,
+			rot: Math.random() * Math.PI * 2,
+			vrot: (Math.random() - 0.5) * 0.3,
+			w: 6 + Math.random() * 12,
+			h: 8 + Math.random() * 8,
+			color: colors[Math.floor(Math.random() * colors.length)],
+			ttl: 80 + Math.floor(Math.random() * 120)
+		});
+	}
+	if (!_confettiAnim) _confettiLoop();
+}
+
+function _confettiLoop() {
+	if (!_confettiCtx) return;
+	const ctx = _confettiCtx;
+	const canvas = _confettiCanvas;
+	ctx.clearRect(0,0,canvas.width,canvas.height);
+	for (let i = _confettiParticles.length - 1; i >= 0; i--) {
+		const p = _confettiParticles[i];
+		p.x += p.vx;
+		p.y += p.vy;
+		p.vy += 0.09; // gravity
+		p.rot += p.vrot;
+		p.ttl--;
+		ctx.save();
+		ctx.translate(p.x, p.y);
+		ctx.rotate(p.rot);
+		ctx.fillStyle = p.color;
+		ctx.fillRect(-p.w/2, -p.h/2, p.w, p.h);
+		ctx.restore();
+		if (p.y > canvas.height + 60 || p.ttl <= 0) {
+			_confettiParticles.splice(i, 1);
+		}
+	}
+	if (_confettiParticles.length === 0) {
+		// stop animation and remove canvas shortly
+		cancelAnimationFrame(_confettiAnim);
+		_confettiAnim = null;
+		setTimeout(() => {
+			if (_confettiCanvas && _confettiParticles.length === 0) {
+				_confettiCanvas.remove();
+				_confettiCanvas = null;
+				_confettiCtx = null;
+			}
+		}, 400);
+		return;
+	}
+	_confettiAnim = requestAnimationFrame(_confettiLoop);
+}
+
+function launchConfettiBurst(count = 100) {
+	_spawnConfetti(count);
+}
+
+// stop and clear any running confetti immediately
+function stopConfetti() {
+	if (_confettiAnim) cancelAnimationFrame(_confettiAnim);
+	_confettiAnim = null;
+	_confettiParticles.length = 0;
+	if (_confettiCanvas) {
+		_confettiCanvas.remove();
+		_confettiCanvas = null;
+		_confettiCtx = null;
+	}
+}
 
 // initial UI
 updateHUD();

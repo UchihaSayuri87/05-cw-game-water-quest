@@ -12,12 +12,17 @@
   --cw-dark: #073b4c;
   --bg: #f7fbfd;
   --bad: #6b4f3f; /* dirty water */
+
+  /* Accessible design tokens (keeps charity: water palette) */
+  --focus-ring: rgba(255,201,7,0.24);   /* yellow focus ring */
+  --elevation-1: 0 6px 18px rgba(2,6,23,0.08);
+  --radius-lg: 12px;
 }
 
 *{ box-sizing:border-box; }
 
 body{
-  font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+  font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   margin:0;
   padding:30px;
   background: linear-gradient(180deg, var(--bg) 0%, #eaf6ff 100%);
@@ -129,6 +134,13 @@ h1 { text-align:center; font-size:30px; font-weight:bold; color:var(--cw-blue); 
   box-shadow: 0 4px 10px rgba(2,8,20,0.04);
   display:flex;align-items:center;justify-content:center;
   cursor:pointer;transition:background-color 0.3s;
+
+  /* Make grid cells easier to tap: increase min-height and center content */
+  min-height: 128px;
+  padding: 6px;            /* breathing room */
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 /* Ensure grid cells are positioned for absolute wrappers (already set, keep) */
@@ -181,6 +193,15 @@ h1 { text-align:center; font-size:30px; font-weight:bold; color:var(--cw-blue); 
   transition: transform 120ms ease, filter 140ms ease, opacity 120ms ease;
   z-index: 30;
   opacity: 1;
+
+  /* Can visuals: smoother pop and subtle shadow boost when active */
+  transition: transform 220ms cubic-bezier(.2,.9,.2,1), box-shadow 180ms ease, opacity 160ms ease;
+  transform-origin: center;
+  will-change: transform, opacity;
+}
+.grid-cell.pop .water-can {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 10px 26px rgba(2,6,23,0.12);
 }
 
 /* Dirty / obstacle can: use its own background image and match sizing/placement of normal cans */
@@ -192,6 +213,10 @@ h1 { text-align:center; font-size:30px; font-weight:bold; color:var(--cw-blue); 
   box-shadow: 0 6px 14px rgba(7,45,60,0.18);
   border: 2px solid rgba(0,0,0,0.10);
   filter: none;
+
+  /* Obstacle (dirty) can differentiation: subtle red accent ring */
+  box-shadow: 0 8px 18px rgba(245,64,44,0.10);
+  border: 2px solid rgba(245,64,44,0.12);
 }
 
 /* If the dirty image is not present, createCan inserts an inline SVG — ensure it fills the container */
@@ -225,6 +250,20 @@ h1 { text-align:center; font-size:30px; font-weight:bold; color:var(--cw-blue); 
   color: var(--cw-blue);
   min-height: 28px;
   margin-top: 10px;
+
+  /* Achievement/milestone badge styling */
+  display:inline-block;
+  background: rgba(46,157,247,0.06);
+  color: var(--cw-blue);
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-weight:700;
+  box-shadow: none;
+  transition: transform 180ms ease, opacity 200ms ease;
+}
+.achievement.show {
+  transform: translateY(-6px);
+  opacity: 1;
 }
 
 /* Overlay / start + end screens */
@@ -262,7 +301,15 @@ h1 { text-align:center; font-size:30px; font-weight:bold; color:var(--cw-blue); 
 }
 
 /* when a real banner image exists, it will be visible; fallback sits on top */
-.top-banner { max-width: 980px; width:100%; display:block; border-radius:12px; box-shadow:0 8px 22px rgba(2,6,23,0.08); object-fit:contain; }
+.top-banner {
+  max-width: 980px;
+  width:100%;
+  display:block;
+  border-radius:12px;
+  box-shadow:0 8px 22px rgba(2,6,23,0.08);
+  object-fit:contain;
+  cursor: pointer; /* indicate the banner is clickable to start the game */
+}
 
 /* Fallback hero layout (center column) */
 .banner-fallback {
@@ -368,3 +415,85 @@ h1 { text-align:center; font-size:30px; font-weight:bold; color:var(--cw-blue); 
 
 /* subtle outline so you can see grid cells during testing */
 .grid-cell { outline: none; }
+
+/* confetti canvas overlay */
+.confetti-canvas {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 60;
+}
+
+/* Respect user preference for reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .start-btn, .banner-play, button, .water-can, .grid-cell .water-can-wrapper,
+  .achievement { transition: none !important; animation: none !important; }
+  @keyframes score-bump { 0% { transform: none; } }
+}
+
+/* Responsive: ensure hero/play scales on small screens */
+@media (max-width: 420px) {
+  .banner-play { padding: 10px 22px; font-size: 15px; }
+  .hero-title { font-size: 22px; }
+  .grid-cell { min-height: 96px; }
+}
+
+/* score bump animation used by JS hook */
+@keyframes score-bump {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.08); }
+  100% { transform: scale(1); }
+}
+.score.updated {
+  animation: score-bump 360ms ease;
+}
+
+/* Leaderboard / winner form */
+.leaderboard-form {
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+  align-items:center;
+  margin:12px 0 8px;
+}
+.leaderboard-form label {
+  font-size:0.95rem;
+  color:var(--cw-dark);
+  font-weight:600;
+}
+.leaderboard-form input {
+  width:100%;
+  max-width:320px;
+  padding:10px 12px;
+  border-radius:8px;
+  border:1px solid rgba(7,43,58,0.08);
+  font-size:15px;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.6);
+}
+.leaderboard-form .start-btn { padding:8px 18px; font-size:15px; }
+
+/* Leaderboard section */
+.leaderboard-section {
+  margin-top:12px;
+  text-align:left;
+  max-width:420px;
+}
+.leaderboard-section h3{
+  margin:0 0 8px; color:var(--cw-blue);
+}
+.leaderboard-list {
+  list-style: decimal;
+  margin:0;
+  padding-left:1.1em;
+  max-height:240px;
+  overflow:auto;
+}
+.leaderboard-list li {
+  padding:8px 6px;
+  border-bottom:1px solid rgba(2,6,23,0.04);
+  display:flex;
+  justify-content:space-between;
+  gap:12px;
+}
+.leaderboard-list li .name { font-weight:700; color:var(--cw-dark); }
+.leaderboard-list li .score { color:var(--cw-blue); font-weight:800; }

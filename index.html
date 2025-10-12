@@ -9,15 +9,15 @@
 <body>
 	<!-- new top banner (uses img/banner.png). If it fails to load the inline onerror adds .banner-broken) -->
 	<div class="banner-wrapper">
-		<img id="topBanner" src="img/banner.png" alt="charity: water banner" class="top-banner"
-		     onerror="this.style.display='none'; document.documentElement.classList.add('banner-broken');" />
+		<!-- inline SVG banner fallback to avoid 404 when img/banner.png is missing -->
+		<img id="topBanner" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='1200' height='280' viewBox='0 0 1200 280'><rect width='1200' height='280' rx='12' fill='%23FFC907'/><text x='50%' y='55%' dominant-baseline='middle' text-anchor='middle' font-family='Arial,Helvetica,sans-serif' font-size='56' fill='%2307243a' font-weight='700'>Water Quest</text></svg>" alt="charity: water banner" class="top-banner" />
 
 		<!-- Hero fallback: original header placed inside the hero, plus icon/title/play -->
-		<div class="banner-fallback" aria-hidden="true">
+		<div class="banner-fallback"><!-- removed aria-hidden="true" to avoid focus/aria-hidden conflict -->
 			<div class="banner-hero">
 				<header class="site-header">
-					<img id="logoImg" src="img/logo.png" alt="charity: water logo" class="logo"
-					     onerror="document.documentElement.classList.add('logo-broken'); this.style.display='none';" />
+					<!-- inline SVG logo fallback to avoid 404 when img/logo.png is missing -->
+					<img id="logoImg" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><circle cx='32' cy='32' r='30' fill='%23ffffff' opacity='0.02'/><path d='M32 10c6 8 12 14 12 22 0 6.6-5.4 12-12 12s-12-5.4-12-12c0-8 6-14 12-22z' fill='%232E9DF7'/></svg>" alt="charity: water logo" class="logo" />
 					<div class="title-block">
 						<h1>Water Drop</h1>
 						<p class="tagline">Tap clean drops, avoid dirty ones — save as many as you can!</p>
@@ -67,6 +67,9 @@
 			<h2 id="resultTitle">Time's up!</h2>
 			<p id="resultMessage"></p>
 			<p class="final-score">Final score: <span id="finalScore">0</span></p>
+
+			<!-- removed leaderboard form and section to simplify/debug gameplay -->
+
 			<button id="replayBtn" class="start-btn">Play again</button>
 		</div>
 	</div>
