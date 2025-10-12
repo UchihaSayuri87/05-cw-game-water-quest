@@ -7,28 +7,36 @@
 	<link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-	<header class="site-header">
-		<!-- external logo with onerror fallback that toggles CSS class on the root element -->
-		<img id="logoImg" src="img/logo.png" alt="charity: water logo" class="logo"
-		     onerror="document.documentElement.classList.add('logo-broken'); this.style.display='none';" />
-		<!-- inline SVG fallback (hidden by default via CSS, shown when .logo-broken is present) -->
-		<svg class="logo-svg" viewBox="0 0 64 64" role="img" aria-label="Water Drop logo" xmlns="http://www.w3.org/2000/svg" focusable="false" aria-hidden="true">
-			<circle cx="32" cy="32" r="30" fill="#ffffff" opacity="0.02"></circle>
-			<path d="M32 10c6 8 12 14 12 22 0 6.6-5.4 12-12 12s-12-5.4-12-12c0-8 6-14 12-22z" fill="#2E9DF7"></path>
-			<circle cx="44" cy="18" r="4" fill="#FFC907"></circle>
-		</svg>
+	<!-- new top banner (uses img/banner.png). If it fails to load the inline onerror adds .banner-broken) -->
+	<div class="banner-wrapper">
+		<img id="topBanner" src="img/banner.png" alt="charity: water banner" class="top-banner"
+		     onerror="this.style.display='none'; document.documentElement.classList.add('banner-broken');" />
 
-		<div class="title-block">
-			<h1>Water Drop</h1>
-			<p class="tagline">Tap clean drops, avoid dirty ones — save as many as you can!</p>
+		<!-- Hero fallback: original header placed inside the hero, plus icon/title/play -->
+		<div class="banner-fallback" aria-hidden="true">
+			<div class="banner-hero">
+				<header class="site-header">
+					<img id="logoImg" src="img/logo.png" alt="charity: water logo" class="logo"
+					     onerror="document.documentElement.classList.add('logo-broken'); this.style.display='none';" />
+					<div class="title-block">
+						<h1>Water Drop</h1>
+						<p class="tagline">Tap clean drops, avoid dirty ones — save as many as you can!</p>
+					</div>
+				</header>
+
+				<div class="hero-icon" aria-hidden="true"></div>
+				<h2 class="hero-title">WATER<br/>QUEST</h2>
+				<button id="bannerPlay" class="banner-play">PLAY</button>
+			</div>
 		</div>
-	</header>
+	</div>
 
 	<main class="game-wrap">
 		<section class="hud">
 			<div class="score">Score: <span id="score">0</span></div>
 			<div class="timer">Time: <span id="time">30</span>s</div>
-			<button id="startBtn" class="start-btn">Start Game</button>
+			<!-- Start button removed (hero PLAY is primary). Keep Reset for manual control -->
+			<button id="resetBtn" class="start-btn">Reset</button>
 		</section>
 
 		<section id="gameField" class="game-field" aria-live="polite">

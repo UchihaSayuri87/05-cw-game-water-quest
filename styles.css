@@ -44,11 +44,34 @@ body{
   align-items:center;
   gap:1rem;
   width:100%;
+  justify-content: center;
   max-width:980px;
+  box-sizing: border-box;
+  padding: 0 8px;
 }
 .logo{ height:56px; width:auto; display:block; flex-shrink:0; }
 .title-block h1{ margin:0; font-size:1.5rem; color:var(--cw-dark); }
 .tagline{ margin:0; color:#06638b; font-size:0.95rem; }
+
+/* Make the original header visible inside the hero and style it for the yellow banner */
+.banner-hero .site-header .logo {
+  height: 48px;
+  width: auto;
+  display: block;
+}
+
+/* Make the title and tagline readable on the yellow hero */
+.banner-hero .title-block h1 {
+  margin: 0;
+  font-size: 1.2rem;
+  color: #072b3a; /* choose dark for contrast against yellow */
+  font-weight: 800;
+}
+.banner-hero .title-block .tagline {
+  margin: 0;
+  color: rgba(7,43,58,0.9);
+  font-size: 0.95rem;
+}
 
 /* Basic headings */
 h1 { text-align:center; font-size:30px; font-weight:bold; color:var(--cw-blue); margin:0 0 8px 0; }
@@ -74,87 +97,105 @@ h1 { text-align:center; font-size:30px; font-weight:bold; color:var(--cw-blue); 
   height:60vh;
   min-height:360px;
   margin-top:1rem;
+
+  /* increased padding so the playable area has breathing room */
+  padding: 24px;
+  display: flex;
+  align-items: center;       /* center grid vertically */
+  justify-content: center;   /* center grid horizontally */
+
   background: linear-gradient(180deg, rgba(46,157,247,0.04), rgba(46,157,247,0.01));
   border-radius:12px;
   overflow:hidden;
   border: 2px solid rgba(46,157,247,0.08);
-  padding: 12px; /* added padding so drops don't start flush to the edge */
 }
 
 /* Game grid / legacy grid cells (from previous version) */
-.game-grid{
-  display:grid;
+.game-grid {
+  width: min(520px, 92%);
+  display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap:12px;
-  max-width:520px;
-  margin:6px auto;
-  padding:6px;
+  gap: 12px;
+  margin: 6px auto;
 }
+
 .grid-cell{
+  position: relative;
+  overflow: visible; /* allow wrappers to pop outside slightly */
+  min-height: 110px;
   background: linear-gradient(180deg,#ffffff,#f4fbff);
   border-radius:10px;
-  aspect-ratio:1;
-  position:relative;
-  overflow:hidden;
-  box-shadow: 0 4px 10px rgba(2,8,20,0.06);
+  outline: 1px solid rgba(2,6,23,0.04);
+  box-shadow: 0 4px 10px rgba(2,8,20,0.04);
   display:flex;align-items:center;justify-content:center;
   cursor:pointer;transition:background-color 0.3s;
 }
 
-/* popped can wrapper centers inside the cell */
+/* Ensure grid cells are positioned for absolute wrappers (already set, keep) */
+.grid-cell { position: relative; overflow: hidden; }
+
+/* Centered pop wrapper: start below the card and animate to exact center */
 .grid-cell .water-can-wrapper{
   position: absolute;
   left: 50%;
-  top: 62%;
-  transform: translate(-50%, 100%) scale(0.75);
-  transition: transform 220ms cubic-bezier(.2,.9,.2,1);
-  pointer-events: none; /* clicks go to inner .water-can */
+  top: 50%;
+  /* start off below the visible area and slightly scaled down */
+  transform: translate(-50%, 110%) scale(0.75);
+  transition: transform 220ms cubic-bezier(.2,.9,.2,1), opacity 160ms ease;
+  pointer-events: none; /* clicks go to the .water-can */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  z-index: 20;
 }
-.grid-cell .water-can{
+
+/* When popped, center the can inside the card */
+.grid-cell.pop .water-can-wrapper{
+  transform: translate(-50%, -50%) scale(1);
+  opacity: 1;
+}
+
+/* ensure the inline SVG jerry-can fills its container and keeps shape */
+.grid-cell .water-can svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* make the can look more like a jerry can (box with handle) — keep slight rounding */
+.grid-cell .water-can {
   width: 64px;
   height: 64px;
+  display: block;
+  margin: 0 auto;
   pointer-events: auto;
   transform-origin: center;
+  border-radius: 6px; /* subtle rounding */
+  background-color: var(--cw-yellow);
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  box-shadow: 0 6px 14px rgba(7,45,60,0.12);
+  border: 2px solid rgba(0,0,0,0.06);
+  transition: transform 120ms ease, filter 140ms ease, opacity 120ms ease;
+  z-index: 30;
+  opacity: 1;
 }
 
-/* Use a 'pop' modifier when the can is visible */
-.grid-cell.pop .water-can-wrapper{
-  transform: translate(-50%, 0%) scale(1);
-}
-
-/* obstacle (dirty can) visual — show a clear black silhouette so players can avoid it */
+/* Dirty / obstacle can: use its own background image and match sizing/placement of normal cans */
 .grid-cell .water-can.obstacle {
-  /* force the jerry-can image to render as a solid black silhouette */
-  filter: brightness(0) saturate(100%) contrast(120%);
-  background-blend-mode: normal;
-  /* ensure silhouette stands out against cell */
-  box-shadow: 0 6px 12px rgba(0,0,0,0.35);
-  border: 2px solid rgba(0,0,0,0.08);
+  background-image: url('img/dirty-can.png');
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  box-shadow: 0 6px 14px rgba(7,45,60,0.18);
+  border: 2px solid rgba(0,0,0,0.10);
+  filter: none;
 }
 
-/* slightly reduce opacity on normal state to emphasize silhouette contrast */
-.grid-cell .water-can {
-  transition: filter 140ms ease, transform 120ms ease, opacity 120ms ease;
-}
-
-/* small tap feedback */
-.water-can.tap-effect {
-  transform: scale(0.86) !important;
-  opacity: 0.95;
-}
-
-/* water-can: use external image file for branding asset */
-.water-can{
-  width:100%; height:100%;
-  background-image: url('img/water-can.png');
-  background-size: cover;
-  background-repeat:no-repeat;
-  background-position:center;
-  cursor:pointer; border-radius:50%;
-  animation: popUp 0.5s cubic-bezier(0.17,0.67,0.34,2);
-  transform-origin:center;
-}
-@keyframes popUp{ 0%{ transform:scale(0.5); } 100%{ transform:scale(1); } }
+/* If the dirty image is not present, createCan inserts an inline SVG — ensure it fills the container */
+.grid-cell .water-can svg { width: 100%; height: 100%; display: block; }
 
 /* Drops (falling items) */
 .drop, .bad-drop{
@@ -210,12 +251,97 @@ h1 { text-align:center; font-size:30px; font-weight:bold; color:var(--cw-blue); 
 .progress{ max-width:500px; height:10px; background:#eaeef6; border-radius:8px; margin:14px auto; overflow:hidden; }
 .progress-fill{ height:100%; background: linear-gradient(90deg,var(--cw-blue),var(--cw-light-blue)); width:0%; transition:width 300ms ease; }
 
-/* Responsive tweaks */
+/* Top page banner: centers and pads the image, provides subtle elevation */
+.banner-wrapper {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  padding: 18px 12px; /* page padding around banner */
+  box-sizing: border-box;
+  background: var(--cw-yellow); /* big yellow band like reference */
+}
+
+/* when a real banner image exists, it will be visible; fallback sits on top */
+.top-banner { max-width: 980px; width:100%; display:block; border-radius:12px; box-shadow:0 8px 22px rgba(2,6,23,0.08); object-fit:contain; }
+
+/* Fallback hero layout (center column) */
+.banner-fallback {
+  max-width: 420px;
+  width: 100%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+.banner-hero {
+  width:100%;
+  padding: 28px 18px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:22px;
+  text-align:center;
+  background: transparent;
+}
+
+/* black drop icon in rounded square */
+.hero-icon{
+  width:84px;
+  height:84px;
+  border-radius:18px;
+  background: #000;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  box-shadow: 0 8px 18px rgba(2,6,23,0.08);
+}
+/* drop shape inside the square via svg background for crispness */
+.hero-icon::after{
+  content: "";
+  width:36px;
+  height:44px;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path fill='%23ffffff' d='M12 2s6 5.5 6 9a6 6 0 1 1-12 0c0-3.5 6-9 6-9z'/></svg>");
+  background-size: contain;
+  background-repeat: no-repeat;
+  display:block;
+}
+
+/* big stacked white title like reference */
+.hero-title{
+  margin:0;
+  font-weight:800;
+  color: #fff;
+  font-size: 40px;
+  line-height: 0.95;
+  letter-spacing: -0.02em;
+  text-transform: uppercase;
+  text-shadow: 0 4px 12px rgba(2,6,23,0.08);
+}
+
+/* blue pill play button */
+.banner-play{
+  appearance: none;
+  -webkit-appearance: none;
+  background: linear-gradient(180deg, var(--cw-blue) 0%, #0f86e3 100%);
+  color: #fff;
+  border: none;
+  padding: 14px 40px;
+  border-radius: 999px;
+  font-weight: 900;
+  font-size: 18px;
+  cursor: pointer;
+  box-shadow: 0 14px 36px rgba(46,157,247,0.20);
+}
+.banner-play:active{ transform: translateY(1px); }
+.banner-play:focus{ outline: 3px solid rgba(255,201,7,0.18); outline-offset: 4px; }
+
+/* keep earlier .site-header spacing so hero and header don't collide */
+.site-header { margin-top: 12px; }
+
+/* smaller screens: scale down hero */
 @media (max-width:640px){
-  .site-header{ flex-direction:column; align-items:flex-start; }
-  .hud{ flex-direction:column; align-items:flex-start; gap:0.6rem; }
-  .drop, .bad-drop{ width:36px; height:48px; }
-  body{ padding:16px; }
+  .hero-title { font-size: 28px; }
+  .hero-icon { width:64px; height:64px; border-radius:12px; }
+  .banner-play { padding:12px 28px; font-size:16px; }
 }
 
 /* logo SVG fallback rules: show inline SVG when the external image failed to load */
@@ -239,3 +365,6 @@ h1 { text-align:center; font-size:30px; font-weight:bold; color:var(--cw-blue); 
   filter: brightness(0) saturate(100%) contrast(120%);
   transition: filter 140ms ease, transform 120ms ease, opacity 120ms ease;
 }
+
+/* subtle outline so you can see grid cells during testing */
+.grid-cell { outline: none; }
