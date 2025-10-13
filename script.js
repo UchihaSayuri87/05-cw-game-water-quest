@@ -1,23 +1,29 @@
+"use strict";
+
 // Whack-a-mole style game with jerry cans and obstacles.
 
 const replayBtn = document.getElementById('replayBtn');
 const scoreEl = document.getElementById('score');
 const timeEl = document.getElementById('time');
-let grid = document.getElementById('gameGrid');
+// cache the grid element once (assume static 3x3 markup in index.html)
+let gridEl = document.getElementById('gameGrid');
 const achievementEl = document.getElementById('achievement');
 const progressFill = document.getElementById('progress-fill');
 const overlay = document.getElementById('overlay');
 const finalScore = document.getElementById('finalScore');
 const resultTitle = document.getElementById('resultTitle');
 const resultMessage = document.getElementById('resultMessage');
-const resetBtn = document.getElementById('resetBtn'); // new
+// cache banner elements used by UI wiring
+const bannerWrapEl = document.querySelector('.banner-wrapper');
+const bannerPlayEl = document.getElementById('bannerPlay');
+const topBannerEl = document.getElementById('topBanner');
 
 const GAME_TIME = 30;
 const POP_INTERVAL_MIN = 600;
 const POP_INTERVAL_MAX = 1000;
 const POP_VISIBLE_MS = 900;
 const BAD_CHANCE = 0.18; // chance a popped can is a dirty/obstacle can
-const WIN_THRESHOLD = 20;
+const WIN_THRESHOLD = 10;
 const BAD_PENALTY = 2; // <-- new: points deducted for clicking a dirty jerry can
 
 // messages
@@ -51,13 +57,10 @@ let peakScore = 0; // <-- added: track highest score achieved during a run
 function randInt(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
 function rand(min, max) { return Math.random() * (max - min) + min; }
 
-// ensure grid reference (defensive if DOM changed)
-if (!grid) {
-  const fallback = document.getElementById('gameGrid') || document.querySelector('.game-grid');
-  if (fallback) {
-    // assign to the local grid variable so the rest of the script uses it
-    grid = fallback;
-  }
+// ensure grid reference (one-time fallback)
+if (!gridEl) {
+  const fallback = document.querySelector('.game-grid');
+  if (fallback) gridEl = fallback;
 }
 
 function updateHUD() {
@@ -78,7 +81,8 @@ function updateHUD() {
 }
 
 function clearAllPops() {
-	grid.querySelectorAll('.grid-cell').forEach(cell => {
+	if (!gridEl) return;
+	gridEl.querySelectorAll('.grid-cell').forEach(cell => {
 		cell.classList.remove('pop');
 		const wrapper = cell.querySelector('.water-can-wrapper');
 		if (wrapper) wrapper.remove();
@@ -94,6 +98,9 @@ function createCan(isBad) {
 	const can = document.createElement('div');
 	can.className = 'water-can';
 	// removed development-only inline sizing/visual styles here; CSS handles sizing
+
+	// mark whether this can is "bad" using a data attribute (used by delegated handler)
+	can.dataset.bad = isBad ? '1' : '0';
 
 	// prefer external branded assets if present; fall back to inline SVG
 	const html = document.documentElement;
@@ -141,12 +148,10 @@ function createCan(isBad) {
 // pop a random cell
 function popRandom() {
 	if (!running) return;
-	// defensive: ensure grid reference
-	const cells = Array.from((grid || document.getElementById('gameGrid') || document.querySelector('.game-grid')).querySelectorAll('.grid-cell'));
-	if (!cells.length) {
-		// no explicit console output — silent fail handled upstream
-		return;
-	}
+	if (!gridEl) return;
+	const cells = Array.from(gridEl.querySelectorAll('.grid-cell'));
+	if (!cells.length) return;
+
 	// pick an index different from lastIndex to avoid same cell twice
 	let idx = randInt(0, cells.length - 1);
 	if (cells.length > 1 && idx === lastIndex) idx = (idx + 1) % cells.length;
@@ -161,52 +166,17 @@ function popRandom() {
 
 	// force visible state quickly (guard against missing CSS)
 	requestAnimationFrame(() => {
-		// explicit inline styles only for the transient show/hide (keeps animation reliable)
 		wrapper.style.opacity = '1';
 		wrapper.style.transform = 'translate(-50%, -50%) scale(1)';
 		cell.classList.add('pop');
-		// ensure SVG inside can is visible (defensive)
 		const svg = can.querySelector('svg');
 		if (svg) { svg.style.width = '100%'; svg.style.height = '100%'; }
 	});
 
-	// click handler
-	const tapped = (e) => {
-		e.stopPropagation();
-		// visual tap
-		can.classList.add('tap-effect');
-
-		if (isBad) {
-			// show black silhouette for dirty can before removing
-			can.classList.add('silhouette');
-			setTimeout(() => {
-				if (cell) cell.classList.remove('pop');
-				if (wrapper) wrapper.remove();
-			}, 220); // slightly longer so silhouette is visible
-
-			// apply penalty
-			score = Math.max(0, score - BAD_PENALTY);
-			showAchievement(`-${BAD_PENALTY} (dirty can)`);
-		} else {
-			setTimeout(() => {
-				if (cell) cell.classList.remove('pop');
-				if (wrapper) wrapper.remove();
-			}, 120);
-			score += 1;
-			// update peak score when incrementing
-			peakScore = Math.max(peakScore, score);
-			// milestone feedback
-			if (milestones[score]) showAchievement(milestones[score]);
-			else showAchievement('+1');
-		}
-		updateHUD();
-	};
-	can.addEventListener('pointerdown', tapped, { once: true });
-
+	// NOTE: per-can pointerdown listener removed in favor of a delegated handler on gridEl
 	// auto-hide after POP_VISIBLE_MS if not tapped
 	setTimeout(() => {
 		if (!cell) return;
-		// if still present, remove
 		cell.classList.remove('pop');
 		if (wrapper && wrapper.parentNode) wrapper.remove();
 	}, POP_VISIBLE_MS);
@@ -262,22 +232,13 @@ function startGame() {
 
 		// hide overlay/banner and reset UI
 		overlay.classList.add('hidden');
-		const bannerWrap = document.querySelector('.banner-wrapper');
-		if (bannerWrap) bannerWrap.classList.add('hidden');
+		if (bannerWrapEl) bannerWrapEl.classList.add('hidden');
 
 		updateHUD();
 		clearAllPops();
 
-		// ensure grid exists
-		const gridEl = grid || document.getElementById('gameGrid') || document.querySelector('.game-grid');
-		if (gridEl && gridEl.querySelectorAll('.grid-cell').length === 0) {
-			for (let i = 0; i < 9; i++) {
-				const cell = document.createElement('div');
-				cell.className = 'grid-cell';
-				cell.dataset.index = i;
-				gridEl.appendChild(cell);
-			}
-		}
+		// gridEl is expected to exist in the HTML (static 3x3). If it's missing, abort start.
+		if (!gridEl) { running = false; return; }
 
 		// start timers and first pop
 		startCountdown();
@@ -345,14 +306,13 @@ function resetGame() {
 
 // --- Improved hideBanner: blur focused element inside banner before hiding (fixes aria-hidden+focus) ---
 function hideBanner() {
-	const bannerWrap = document.querySelector('.banner-wrapper');
-	if (!bannerWrap) return;
+	if (!bannerWrapEl) return;
 	// if focus is inside the banner, blur it first to avoid aria-hidden/focus conflicts
 	const active = document.activeElement;
-	if (active && bannerWrap.contains(active) && typeof active.blur === 'function') {
+	if (active && bannerWrapEl.contains(active) && typeof active.blur === 'function') {
 		active.blur();
 	}
-	bannerWrap.classList.add('hidden');
+	bannerWrapEl.classList.add('hidden');
 }
 
 // --- Consolidated UI wiring (single listeners, no duplicates) ---
@@ -361,11 +321,6 @@ replayBtn?.addEventListener('click', () => {
 	overlay.classList.add('hidden');
 	hideBanner();
 	setTimeout(startGame, 140);
-});
-
-// reset: use the new resetGame implementation
-resetBtn?.addEventListener('click', () => {
-	resetGame();
 });
 
 // keyboard: Space to start when not running
@@ -377,13 +332,13 @@ document.addEventListener('keydown', (e) => {
 	}
 });
 
-// banner fallback PLAY button and banner image both start the game
-document.getElementById('bannerPlay')?.addEventListener('click', (e) => {
+// banner fallback PLAY button and banner image both start the game (use cached refs)
+bannerPlayEl?.addEventListener('click', (e) => {
 	e?.preventDefault();
 	hideBanner();
 	startGame();
 });
-document.getElementById('topBanner')?.addEventListener('click', (e) => {
+topBannerEl?.addEventListener('click', (e) => {
 	const el = e.currentTarget;
 	if (!el) return;
 	const style = window.getComputedStyle(el);
@@ -494,3 +449,49 @@ function stopConfetti() {
 // initial UI
 updateHUD();
 clearAllPops();
+
+// Delegated pointer handler — centralizes tapping logic and prevents attaching many listeners.
+// Uses data-bad or .obstacle class to determine penalty.
+if (gridEl) {
+	gridEl.addEventListener('pointerdown', (e) => {
+		const can = e.target.closest('.water-can');
+		if (!can || !gridEl.contains(can)) return;
+
+		// prevent double-tap
+		if (can.classList.contains('tapped')) return;
+		can.classList.add('tapped');
+
+		// visual tap
+		can.classList.add('tap-effect');
+
+		// determine wrapper + cell
+		const wrapper = can.parentElement;
+		const cell = wrapper?.parentElement;
+
+		const isBad = can.dataset.bad === '1' || can.classList.contains('obstacle');
+
+		if (isBad) {
+			// show silhouette then remove
+			can.classList.add('silhouette');
+			setTimeout(() => {
+				if (cell) cell.classList.remove('pop');
+				if (wrapper) wrapper.remove();
+			}, 220);
+
+			score = Math.max(0, score - BAD_PENALTY);
+			showAchievement(`-${BAD_PENALTY} (dirty can)`);
+		} else {
+			setTimeout(() => {
+				if (cell) cell.classList.remove('pop');
+				if (wrapper) wrapper.remove();
+			}, 120);
+
+			score += 1;
+			peakScore = Math.max(peakScore, score);
+			if (milestones[score]) showAchievement(milestones[score]);
+			else showAchievement('+1');
+		}
+
+		updateHUD();
+	});
+}

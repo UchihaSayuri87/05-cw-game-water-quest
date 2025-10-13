@@ -28,8 +28,8 @@ Here’s what you're required to implement to bring the game to life:
   - When the timer reaches 0, the game ends  
 
 - **Display a message when the game ends**
-  - If the player scores **20 or more points**, show a **winning** message  
-  - If the player scores **less than 20 points**, show a **"try again"** message  
+  - If the player scores **10 or more points**, show a **winning** message  
+  - If the player scores **less than 10 points**, show a **"try again"** message  
   - Create one array of possible winning messages and one array of losing messages  
   - Depending on whether the user wins or loses, randomly pick and display a message from the appropriate array  
 
