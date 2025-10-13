@@ -17,6 +17,10 @@
   --focus-ring: rgba(255,201,7,0.24);   /* yellow focus ring */
   --elevation-1: 0 6px 18px rgba(2,6,23,0.08);
   --radius-lg: 12px;
+
+  /* add a couple of responsive token fallbacks */
+  --hero-title-size: clamp(22px, 5vw, 40px);
+  --cell-min: 110px; /* base min cell size */
 }
 
 *{ box-sizing:border-box; }
@@ -117,23 +121,43 @@ h1 { text-align:center; font-size:30px; font-weight:bold; color:var(--cw-blue); 
 
 /* Game grid / legacy grid cells (from previous version) */
 .game-grid {
-  width: min(520px, 92%);
+  width: min(680px, 96%);
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 12px;
+  /* fixed 3 columns on larger screens; each column has a sensible minimum */
+  grid-template-columns: repeat(3, minmax(140px, 1fr));
+  gap: clamp(8px, 1.6vw, 16px);
   margin: 6px auto;
 }
 
+/* medium screens (tablets / small laptops) -> 2 columns */
+@media (max-width: 800px) {
+  .game-grid {
+    grid-template-columns: repeat(2, minmax(120px, 1fr));
+  }
+}
+
+/* phones / very narrow screens -> 1 column */
+@media (max-width: 420px) {
+  .game-grid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+}
+
+/* Make grid cells responsive in height and touch-friendly */
 .grid-cell{
   position: relative;
   overflow: visible; /* allow wrappers to pop outside slightly */
-  min-height: 110px;
-  background: linear-gradient(180deg,#ffffff,#f4fbff);
-  border-radius:10px;
+  min-height: clamp(88px, 20vh, 160px);
+  padding: 8px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   outline: 1px solid rgba(2,6,23,0.04);
   box-shadow: 0 4px 10px rgba(2,8,20,0.04);
-  display:flex;align-items:center;justify-content:center;
-  cursor:pointer;transition:background-color 0.3s;
+  cursor:pointer;
+  transition:background-color 0.3s;
 
   /* Make grid cells easier to tap: increase min-height and center content */
   min-height: 128px;
@@ -177,8 +201,8 @@ h1 { text-align:center; font-size:30px; font-weight:bold; color:var(--cw-blue); 
 
 /* make the can look more like a jerry can (box with handle) — keep slight rounding */
 .grid-cell .water-can {
-  width: 64px;
-  height: 64px;
+  width: clamp(44px, 9vw, 64px);
+  height: clamp(44px, 9vw, 64px);
   display: block;
   margin: 0 auto;
   pointer-events: auto;
@@ -303,11 +327,10 @@ h1 { text-align:center; font-size:30px; font-weight:bold; color:var(--cw-blue); 
 /* when a real banner image exists, it will be visible; fallback sits on top */
 .top-banner {
   max-width: 980px;
-  width:100%;
-  display:block;
-  border-radius:12px;
-  box-shadow:0 8px 22px rgba(2,6,23,0.08);
-  object-fit:contain;
+  width: 100%;
+  height: auto;
+  max-height: clamp(120px, 22vh, 280px);
+  object-fit: cover;
   cursor: pointer; /* indicate the banner is clickable to start the game */
 }
 
@@ -321,7 +344,7 @@ h1 { text-align:center; font-size:30px; font-weight:bold; color:var(--cw-blue); 
 }
 .banner-hero {
   width:100%;
-  padding: 28px 18px;
+  padding: clamp(14px, 4vw, 32px);
   display:flex;
   flex-direction:column;
   align-items:center;
@@ -357,7 +380,7 @@ h1 { text-align:center; font-size:30px; font-weight:bold; color:var(--cw-blue); 
   margin:0;
   font-weight:800;
   color: #fff;
-  font-size: 40px;
+  font-size: var(--hero-title-size);
   line-height: 0.95;
   letter-spacing: -0.02em;
   text-transform: uppercase;
@@ -497,3 +520,126 @@ h1 { text-align:center; font-size:30px; font-weight:bold; color:var(--cw-blue); 
 }
 .leaderboard-list li .name { font-weight:700; color:var(--cw-dark); }
 .leaderboard-list li .score { color:var(--cw-blue); font-weight:800; }
+
+/* Responsive typography and hero scaling */
+:root {
+  /* ...existing vars... */
+  /* add a couple of responsive token fallbacks */
+  --hero-title-size: clamp(22px, 5vw, 40px);
+  --cell-min: 110px; /* base min cell size */
+}
+
+.banner-hero {
+  padding: clamp(14px, 4vw, 32px);
+}
+
+/* hero title scales fluidly */
+.hero-title {
+  font-size: var(--hero-title-size);
+  line-height: 0.95;
+}
+
+/* banner image: keep aspect, limit height on small screens */
+.top-banner {
+  max-width: 980px;
+  width: 100%;
+  height: auto;
+  max-height: clamp(120px, 22vh, 280px);
+  object-fit: cover;
+  cursor: pointer;
+}
+
+/* Make grid responsive: auto-fit columns with a sensible min size */
+.game-grid {
+  width: min(680px, 96%);
+  display: grid;
+  /* fixed 3 columns on larger screens; each column has a sensible minimum */
+  grid-template-columns: repeat(3, minmax(140px, 1fr));
+  gap: clamp(8px, 1.6vw, 16px);
+  margin: 6px auto;
+}
+
+/* medium screens (tablets / small laptops) -> 2 columns */
+@media (max-width: 800px) {
+  .game-grid {
+    grid-template-columns: repeat(2, minmax(120px, 1fr));
+  }
+}
+
+/* phones / very narrow screens -> 1 column */
+@media (max-width: 420px) {
+  .game-grid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+}
+
+/* Make grid cells responsive in height and touch-friendly */
+.grid-cell{
+  position: relative;
+  overflow: visible; /* allow wrappers to pop outside slightly */
+  min-height: clamp(88px, 20vh, 160px);
+  padding: 8px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  outline: 1px solid rgba(2,6,23,0.04);
+  box-shadow: 0 4px 10px rgba(2,8,20,0.04);
+  cursor:pointer;
+  transition:background-color 0.3s;
+
+  /* Make grid cells easier to tap: increase min-height and center content */
+  min-height: 128px;
+  padding: 6px;            /* breathing room */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Ensure pop wrapper and cans adapt to smaller cell sizes */
+.grid-cell .water-can-wrapper { 
+  /* scale down on very small screens */
+  transform-origin: center;
+}
+.grid-cell .water-can {
+  width: clamp(44px, 9vw, 64px);
+  height: clamp(44px, 9vw, 64px);
+}
+
+/* Larger hit targets on touch devices */
+@media (hover: none) and (pointer: coarse) {
+  .banner-play, .start-btn, button {
+    padding: 14px 28px;
+    font-size: 16px;
+    touch-action: manipulation;
+  }
+  .grid-cell { min-height: 110px; }
+  .grid-cell .water-can { width: 56px; height: 56px; }
+}
+
+/* reduce heavy motion on small screens for performance & comfort */
+@media (max-width: 420px) {
+  .banner-hero { gap: 12px; padding: 12px; }
+  .hero-icon { width: 56px; height: 56px; border-radius: 12px; }
+  .banner-play { padding: 10px 20px; font-size: 15px; }
+  .progress { max-width: 92%; }
+  /* reduce transform exaggeration */
+  .grid-cell.pop .water-can { transform: translateY(-1px) scale(1.01); }
+}
+
+/* ensure HUD wraps gracefully on small screens */
+.hud {
+  gap: 0.6rem;
+  align-items: center;
+}
+@media (max-width:640px){
+  .hud { flex-wrap:wrap; justify-content:center; gap:0.5rem; }
+  .score, .timer { flex: 0 1 auto; }
+}
+
+/* keep accessibility: focus outlines visible at all sizes */
+.banner-play:focus-visible, .start-btn:focus-visible, button:focus-visible {
+  outline: 3px solid rgba(255,201,7,0.24);
+  outline-offset: 4px;
+}
