@@ -616,7 +616,8 @@ h1 { text-align:center; font-size:30px; font-weight:bold; color:var(--cw-blue); 
 /* smaller screens: scale down hero */
 @media (max-width:640px){
   .hero-title { font-size: 28px; }
-  .hero-icon { width:64px; height:64px; border-radius:12px; }
+  /* scale the hero icon down on narrow viewports while keeping improved contrast */
+  .hero-icon { width:84px; height:84px; border-radius:12px; }
   .banner-play { padding:12px 28px; font-size:16px; }
 }
 
@@ -774,3 +775,33 @@ h1 { text-align:center; font-size:30px; font-weight:bold; color:var(--cw-blue); 
   .brand-square{ width:44px; height:44px; }
   .brand-horizontal{ width: min(220px, 60%); }
 }
+
+/* larger, higher-contrast hero mark to match the attachment */
+.hero-icon{
+  width: 120px;
+  height: 120px;
+  border-radius: 18px;
+  /* deep brand tone gradient for better contrast while keeping brand colors */
+  background: linear-gradient(180deg, #072b3a 0%, #03262b 100%);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  box-shadow: 0 18px 40px rgba(2,6,23,0.18);
+  transform: translateZ(0);
+  border: 2px solid rgba(255,255,255,0.06);
+}
+
+/* larger drop SVG inside the icon so it remains crisp at the new size */
+.hero-icon::after{
+  content: "";
+  width: 64px;
+  height: 80px;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path fill='%23ffffff' d='M12 2s6 5.5 6 9a6 6 0 1 1-12 0c0-3.5 6-9 6-9z'/></svg>");
+  background-size: contain;
+  background-repeat: no-repeat;
+  display:block;
+  filter: drop-shadow(0 8px 18px rgba(2,6,23,0.16));
+}
+
+/* Utility: hide elements when JS toggles the 'hidden' class */
+.hidden { display: none !important; visibility: hidden !important; pointer-events: none !important; }

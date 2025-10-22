@@ -575,6 +575,29 @@ bannerCloseEl?.addEventListener('click', (e) => {
   // don't start the game unless the user explicitly presses play
 });
 
+// --- New: Ensure overlays/banners are hidden and controls wired on initial load ---
+// this prevents the banner/tutorial/end panels from "sticking" on first load
+document.addEventListener('DOMContentLoaded', () => {
+  try {
+    // If any overlay panels somehow lack .hidden (or JS added them earlier),
+    // force the overlay into a hidden state so the game area is reachable.
+    overlayHide();
+  } catch (_) { /* ignore */ }
+
+  try {
+    // Hide banner on initial load so the UI is immediately playable.
+    // Users can still open it via bannerPlay if you choose to show again.
+    hideBanner();
+  } catch (_) { /* ignore */ }
+
+  // Wire the new end-panel close button if present
+  const closeEndBtn = document.getElementById('closeEndBtn');
+  closeEndBtn?.addEventListener('click', (ev) => {
+    ev?.preventDefault();
+    overlayHide();
+  });
+});
+
 // wire reset button and difficulty selector (listeners added once)
 const resetBtn = document.getElementById('resetBtn');
 const difficultySelect = document.getElementById('difficultySelect');
