@@ -763,4 +763,28 @@ const closeTutorialBtn = document.getElementById('closeTutorialBtn');
 tutorialBtn?.addEventListener('click', (e) => {
   e?.preventDefault();
   const panel = document.getElementById('tutorialPanel');
-  if
+  if (panel) {
+    overlayShow(panel);
+  }
+});
+
+// close tutorial button
+closeTutorialBtn?.addEventListener('click', (e) => {
+  e?.preventDefault();
+  overlayHide();
+});
+
+// allow clicking outside the modal panel (on the overlay backdrop) to close it
+overlay?.addEventListener('pointerdown', (e) => {
+  if (e.target === overlay) overlayHide();
+});
+
+// allow Escape to close any open overlay panel
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && overlay && !overlay.classList.contains('hidden')) {
+    overlayHide();
+  }
+});
+
+// Ensure initial HUD reflects defaults
+updateHUD();
