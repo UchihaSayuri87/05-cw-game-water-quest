@@ -223,8 +223,9 @@ function startGame() {
 		running = true;
 		peakScore = 0;
 
+		// hide overlays/banners using centralized helpers so timers/inert states are handled
 		if (overlay) overlay.classList.add('hidden');
-		if (bannerWrapEl) bannerWrapEl.classList.add('hidden');
+		hideBanner();
 
 		updateHUD();
 		clearAllPops();
@@ -565,6 +566,13 @@ topBannerEl?.addEventListener('click', (e) => {
 	e.preventDefault();
 	hideBanner();
 	startGame();
+});
+
+// wire the banner close button — ensure auto-hide timer and focus are handled
+bannerCloseEl?.addEventListener('click', (e) => {
+  e?.preventDefault();
+  hideBanner();
+  // don't start the game unless the user explicitly presses play
 });
 
 // wire reset button and difficulty selector (listeners added once)
