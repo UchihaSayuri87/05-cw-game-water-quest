@@ -546,27 +546,24 @@ h1 { text-align:center; font-size:30px; font-weight:bold; color:var(--cw-blue); 
 /* keep earlier .site-header spacing so hero and header don't collide */
 .site-header { margin-top: 12px; }
 
-/* jerry brand next to logo: bold, high-contrast black/yellow styling */
+/* jerry brand next to logo: styled to match the in-game clean can visuals */
 .jerry-brand {
   width: 56px;
   height: 56px;
-  object-fit: contain;
-  margin: 0 12px 0 6px;
+  display: inline-block;
   flex: 0 0 auto;
   border-radius: 8px;
   box-shadow: 0 10px 30px rgba(2,6,23,0.12);
-  background: linear-gradient(180deg, #000 0%, #111 100%);
-  display: inline-block;
-  /* ensure the visible can looks black/yellow if the image missing (fallback SVG used) */
-}
-
-/* if the real image is present, prefer showing it without the background; use a silhouette boost */
-.jerry-brand[src$=".png"], .jerry-brand[src$=".jpg"], .jerry-brand[src$=".jpeg"] {
   background: transparent;
-  filter: drop-shadow(0 8px 18px rgba(0,0,0,0.12));
+  border: 2px solid rgba(0,0,0,0.06); /* match .water-can border */
+  padding: 6px; /* give the SVG some breathing room inside the pill */
+  background-repeat: no-repeat;
+  background-size: contain;
+  background-position: center;
+  vertical-align: middle;
 }
 
-/* visible focus for accessibility */
+/* visible focus for accessibility (consistent with other focus styles) */
 .jerry-brand:focus-visible {
   outline: 3px solid rgba(255,201,7,0.24);
   outline-offset: 4px;
