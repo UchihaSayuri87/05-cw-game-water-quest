@@ -184,8 +184,9 @@ function scheduleNextPop() {
 	popTimer = setTimeout(scheduleNextPop, next);
 }
 
-function startCountdown() {
-	timeLeft = GAME_TIME;
+function startCountdown(reset = true) {
+	// if requested, reset the remaining time to full game duration
+	if (reset) timeLeft = GAME_TIME;
 	updateHUD();
 	clearInterval(countdownTimer);
 	countdownTimer = setInterval(() => {
@@ -587,8 +588,8 @@ function _pauseGameForModal() {
 function _resumeGameFromModal() {
   if (!_wasRunningBeforeModal) return;
   running = true;
-  // restart countdown and pop scheduling from current timeLeft
-  startCountdown();
+  // restart countdown and spawn scheduling without resetting the remaining time
+  startCountdown(false);
   scheduleNextPop();
   _wasRunningBeforeModal = false;
 }
@@ -705,3 +706,21 @@ function preloadBrandAssets() {
 
 // call preloader early so UI logic knows which assets exist
 preloadBrandAssets();
+
+// Ensure overlay/panels are in a clean hidden state on initial load
+window.addEventListener('DOMContentLoaded', () => {
+	// hide overlay and panels reliably
+	try { overlayHide(); } catch (e) { /* graceful fallback */ }
+
+	// ensure panels have aria-hidden when page loads
+	const endPanelEl = document.getElementById('endPanel');
+	const tutorialPanelEl = document.getElementById('tutorialPanel');
+	if (endPanelEl) {
+		endPanelEl.classList.add('hidden');
+		endPanelEl.setAttribute('aria-hidden', 'true');
+	}
+	if (tutorialPanelEl) {
+		tutorialPanelEl.classList.add('hidden');
+		tutorialPanelEl.setAttribute('aria-hidden', 'true');
+	}
+});
