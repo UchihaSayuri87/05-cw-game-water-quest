@@ -278,11 +278,32 @@ function resetGame() {
 }
 
 function hideBanner() {
+	// clear any pending auto-hide timer
+	if (bannerAutoHideTimer) {
+		clearTimeout(bannerAutoHideTimer);
+		bannerAutoHideTimer = null;
+	}
+
+	// existing hideBanner logic
 	if (!bannerWrapEl) return;
 	const active = document.activeElement;
 	if (active && bannerWrapEl.contains(active) && typeof active.blur === 'function') active.blur();
 	bannerWrapEl.classList.add('hidden');
 }
+
+// helper to start/restart the banner auto-hide timer
+function startBannerAutoHide() {
+	if (bannerAutoHideTimer) clearTimeout(bannerAutoHideTimer);
+	bannerAutoHideTimer = setTimeout(() => {
+		try {
+			if (bannerWrapEl && !bannerWrapEl.classList.contains('hidden')) hideBanner();
+		} catch (_) { /* ignore */ }
+		bannerAutoHideTimer = null;
+	}, BANNER_AUTO_HIDE_MS);
+}
+
+// ensure the banner auto-hide begins when script initializes (page loaded)
+startBannerAutoHide();
 
 // --- Confetti (single consolidated implementation) ---
 let _confettiCanvas = null;
