@@ -113,30 +113,16 @@ function createCan(isBad) {
 	can.setAttribute('aria-label', isBad ? 'Dirty jerry can — avoid' : 'Clean jerry can');
 	can.tabIndex = 0;
 
-	// existing asset fallback logic
-	const html = document.documentElement;
-	const hasWaterImg = !html.classList.contains('no-water-can');
-	const hasDirtyImg = !html.classList.contains('no-dirty-can');
-
+	// Use inlined data URIs to avoid network 404s. This always displays the intended visuals
 	if (isBad) {
-		if (hasDirtyImg) {
-			can.style.backgroundImage = 'url("img/dirty-can.png")';
-			can.innerHTML = '';
-		} else {
-			can.innerHTML = `<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false"><rect x="8" y="16" width="40" height="32" rx="6" fill="#2b2b2b"></rect><rect x="10" y="8" width="8" height="10" rx="2" fill="#111"></rect><circle cx="46" cy="14" r="5" fill="#111"></circle></svg>`;
-			can.style.backgroundImage = '';
-		}
+		can.style.backgroundImage = `url("${DIRTY_CAN_URI}")`;
+		can.innerHTML = '';
+		can.classList.add('obstacle');
 	} else {
-		if (hasWaterImg) {
-			can.style.backgroundImage = 'url("img/water-can.png")';
-			can.innerHTML = '';
-		} else {
-			can.innerHTML = `<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false"><rect x="8" y="16" width="40" height="32" rx="6" fill="#FFC907"></rect><rect x="10" y="8" width="8" height="10" rx="2" fill="#072b3a"></rect><circle cx="46" cy="14" r="5" fill="#072b3a"></circle></svg>`;
-			can.style.backgroundImage = '';
-		}
+		can.style.backgroundImage = `url("${WATER_CAN_URI}")`;
+		can.innerHTML = '';
 	}
 
-	if (isBad) can.classList.add('obstacle');
 	wrapper.appendChild(can);
 	return { wrapper, can };
 }
@@ -375,6 +361,86 @@ function _confettiLoop() {
 function launchConfettiBurst(count = 100) { _spawnConfetti(count); }
 function stopConfetti() { if (_confettiAnim) cancelAnimationFrame(_confettiAnim); _confettiAnim = null; _confettiParticles.length = 0; if (_confettiCanvas) { _confettiCanvas.remove(); _confettiCanvas = null; _confettiCtx = null; } }
 
+// ---- DEV MODE + inlined can assets ----
+/* Dev mode: set window.__DEV_MODE = true in the console or add ?dev=1 to the URL to skip network preload checks */
+const DEV_MODE = Boolean(window.__DEV_MODE) || (new URLSearchParams(location.search).get('dev') === '1');
+
+// small clean jerry-can SVG (keeps visuals consistent with in-game can)
+const _WATER_CAN_SVG = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'>
+  <rect x='8' y='16' width='48' height='32' rx='6' fill='%23FFC907'/>
+  <rect x='12' y='8' width='8' height='10' rx='2' fill='%23072b3a'/>
+  <circle cx='46' cy='14' r='5' fill='%23072b3a'/>
+  <path d='M32 26s6 6 6 10a6 6 0 0 1-12 0c0-4 6-10 6-10z' fill='%232E9DF7'/>
+</svg>`;
+const WATER_CAN_URI = 'data:image/svg+xml;utf8,' + encodeURIComponent(_WATER_CAN_SVG);
+
+// small dirty jerry-can SVG (obstacle)
+const _DIRTY_CAN_SVG = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'>
+  <rect x='8' y='16' width='48' height='32' rx='6' fill='%236b4f3f'/>
+  <rect x='12' y='8' width='8' height='10' rx='2' fill='%23111'/>
+  <circle cx='46' cy='14' r='5' fill='%23111'/>
+</svg>`;
+const DIRTY_CAN_URI = 'data:image/svg+xml;utf8,' + encodeURIComponent(_DIRTY_CAN_SVG);
+
+// Preload brand assets — skip when DEV_MODE to avoid network checks during development
+function preloadBrandAssets() {
+  if (DEV_MODE) {
+    // in dev mode we rely on inlined assets; ensure no marker classes exist
+    document.documentElement.classList.remove('no-water-can', 'no-dirty-can');
+    return;
+  }
+
+  const html = document.documentElement;
+  const assets = [
+    { src: 'img/water-can.png', missingClass: 'no-water-can' },
+    { src: 'img/dirty-can.png', missingClass: 'no-dirty-can' }
+  ];
+
+  assets.forEach(({ src, missingClass }) => {
+    html.classList.remove(missingClass);
+    const img = new Image();
+    img.onload = () => { html.classList.remove(missingClass); };
+    img.onerror = () => { html.classList.add(missingClass); };
+    img.src = src;
+  });
+}
+
+// call preloader early so UI logic knows which assets exist (no-op in DEV_MODE)
+preloadBrandAssets();
+
+// state restoration after tab switch (delayed to ensure DOM is ready)
+setTimeout(() => {
+	const saved = sessionStorage.getItem('waterQuestSave');
+	if (!saved) return;
+	const data = JSON.parse(saved);
+	if (typeof data.score === 'number') score = Math.max(0, Math.floor(data.score));
+	if (typeof data.timeLeft === 'number') timeLeft = Math.max(0, Math.floor(data.timeLeft));
+	if (typeof data.peakScore === 'number') peakScore = Math.max(0, Math.floor(data.peakScore));
+	if (typeof data.currentDifficulty === 'string' && DIFFICULTY_CONFIGS[data.currentDifficulty]) {
+		currentDifficulty = data.currentDifficulty;
+		setDifficulty(currentDifficulty);
+	}
+	updateHUD();
+}, 50);
+
+// save state on unload (throttled to avoid excessive calls)
+let _saveTimer = null;
+function saveState() {
+	if (_saveTimer) clearTimeout(_saveTimer);
+	_saveTimer = setTimeout(() => {
+		if (!running) {
+			const data = {
+				score: score,
+				timeLeft: timeLeft,
+				peakScore: peakScore,
+				currentDifficulty: currentDifficulty
+			};
+			sessionStorage.setItem('waterQuestSave', JSON.stringify(data));
+		}
+	}, 500);
+}
+window.addEventListener('beforeunload', saveState);
+
 // --- Input handling and shared tap logic ---
 function handleCanTap(can) {
 	if (!can) return;
@@ -599,29 +665,80 @@ function overlayShow(panelEl) {
   // save focus
   _previouslyFocused = document.activeElement instanceof HTMLElement ? document.activeElement : null;
 
-  // pause game while modal visible
-  _pauseGameForModal();
-
-  // mark app regions as inert (use fallback)
-  _appRegions().forEach(el => {
-    try { _applyInert(el, true); } catch(_) {}
-  });
-
-  // show requested panel and overlay, set ARIA
+  // show overlay and target panel first so it is focusable/visible
   overlay.classList.remove('hidden');
   overlay.setAttribute('aria-hidden', 'false');
+
+  // hide other overlay panels and reveal the requested panel
   Array.from(overlay.querySelectorAll('.overlay-content')).forEach(p => p.classList.add('hidden'));
   panelEl.classList.remove('hidden');
   panelEl.removeAttribute('aria-hidden');
 
-  // trap focus inside panel
+  // trap focus inside the panel immediately (moves focus into the modal)
   _trapFocus(panelEl);
+
+  // pause game while modal visible
+  _pauseGameForModal();
+
+  // mark app regions as inert (use fallback) AFTER focus moved into modal
+  _appRegions().forEach(el => {
+    try { _applyInert(el, true); } catch(_) {}
+  });
 }
 
+// small helper to verify an element is in the document and visible
+function _isVisible(el) {
+  if (!el || !(el instanceof Element)) return false;
+  try {
+    const style = window.getComputedStyle(el);
+    if (style.visibility === 'hidden' || style.display === 'none' || el.hasAttribute('hidden')) return false;
+    const rect = el.getBoundingClientRect();
+    return rect.width > 0 && rect.height > 0;
+  } catch (e) {
+    return false;
+  }
+}
+
+// Replace overlayHide with a safe, syntactically-correct implementation
 function overlayHide() {
   if (!overlay) return;
 
-  // hide overlay and panels, set ARIA
+  // release focus trap first (stop intercepting Tab)
+  _releaseFocusTrap();
+
+  // attempt to restore previous focus if possible
+  if (_previouslyFocused) {
+    try {
+      if (document.contains(_previouslyFocused) && _isVisible(_previouslyFocused)) {
+        _previouslyFocused.focus();
+      } else {
+        // fallback targets (in order): bannerPlay, reset button, first .start-btn, then body
+        const fallback = document.getElementById('bannerPlay')
+                       || document.getElementById('resetBtn')
+                       || document.querySelector('.start-btn')
+                       || document.body;
+        if (fallback && typeof fallback.focus === 'function') {
+          try { fallback.focus(); } catch (_) { /* ignore */ }
+        } else {
+          try {
+            if (document.body && typeof document.body.focus === 'function') document.body.focus();
+            else if (document.documentElement && typeof document.documentElement.focus === 'function') document.documentElement.focus();
+          } catch (_) { /* ignore */ }
+        }
+      }
+    } catch (_) {
+      try { if (document.body && typeof document.body.focus === 'function') document.body.focus(); } catch (_) { /* ignore */ }
+    }
+    _previouslyFocused = null;
+  } else {
+    // no previously focused element recorded — blur any focused element inside the overlay so aria-hidden can be applied safely
+    try {
+      const active = document.activeElement;
+      if (overlay.contains(active) && active instanceof HTMLElement) active.blur();
+    } catch (_) { /* ignore */ }
+  }
+
+  // now hide overlay and panels, set ARIA
   overlay.classList.add('hidden');
   overlay.setAttribute('aria-hidden', 'true');
   Array.from(overlay.querySelectorAll('.overlay-content')).forEach(p => {
@@ -631,15 +748,8 @@ function overlayHide() {
 
   // release inert/aria-hidden on app regions (fallback)
   _appRegions().forEach(el => {
-    try { _applyInert(el, false); } catch(_) {}
+    try { _applyInert(el, false); } catch(_) { /* ignore */ }
   });
-
-  // restore focus
-  _releaseFocusTrap();
-  if (_previouslyFocused) {
-    try { _previouslyFocused.focus(); } catch (_) {}
-    _previouslyFocused = null;
-  }
 
   // resume game if it was paused by modal
   _resumeGameFromModal();
@@ -653,74 +763,4 @@ const closeTutorialBtn = document.getElementById('closeTutorialBtn');
 tutorialBtn?.addEventListener('click', (e) => {
   e?.preventDefault();
   const panel = document.getElementById('tutorialPanel');
-  if (panel) overlayShow(panel);
-});
-closeTutorialBtn?.addEventListener('click', (e) => {
-  e?.preventDefault();
-  overlayHide();
-});
-
-// Escape handling: close overlay when visible (keeps focus/inert consistent)
-document.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape' && overlay && !overlay.classList.contains('hidden')) {
-    overlayHide();
-  }
-});
-
-// Ensure endPanel is hidden on load (overlay controlled by script)
-const endPanel = document.getElementById('endPanel');
-if (endPanel) endPanel.classList.add('hidden');
-
-// ensure initial difficulty is applied on load
-setDifficulty(currentDifficulty);
-
-// keep initial UI state
-updateHUD();
-clearAllPops();
-
-// preload brand assets and mark documentElement when images are missing.
-// This lets createCan prefer external images when available and fall back to inline SVG otherwise.
-function preloadBrandAssets() {
-  const html = document.documentElement;
-  const assets = [
-    { src: 'img/water-can.png', missingClass: 'no-water-can' },
-    { src: 'img/dirty-can.png', missingClass: 'no-dirty-can' }
-  ];
-
-  assets.forEach(({ src, missingClass }) => {
-    // remove any stale class first
-    html.classList.remove(missingClass);
-    const img = new Image();
-    img.onload = () => {
-      // asset available — ensure missing marker is not present
-      html.classList.remove(missingClass);
-    };
-    img.onerror = () => {
-      // asset missing — add marker so JS/CSS use fallbacks
-      html.classList.add(missingClass);
-    };
-    // start load
-    img.src = src;
-  });
-}
-
-// call preloader early so UI logic knows which assets exist
-preloadBrandAssets();
-
-// Ensure overlay/panels are in a clean hidden state on initial load
-window.addEventListener('DOMContentLoaded', () => {
-	// hide overlay and panels reliably
-	try { overlayHide(); } catch (e) { /* graceful fallback */ }
-
-	// ensure panels have aria-hidden when page loads
-	const endPanelEl = document.getElementById('endPanel');
-	const tutorialPanelEl = document.getElementById('tutorialPanel');
-	if (endPanelEl) {
-		endPanelEl.classList.add('hidden');
-		endPanelEl.setAttribute('aria-hidden', 'true');
-	}
-	if (tutorialPanelEl) {
-		tutorialPanelEl.classList.add('hidden');
-		tutorialPanelEl.setAttribute('aria-hidden', 'true');
-	}
-});
+  if
