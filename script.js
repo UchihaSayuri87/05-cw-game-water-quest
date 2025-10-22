@@ -19,12 +19,24 @@ const bannerPlayEl = document.getElementById('bannerPlay');
 const topBannerEl = document.getElementById('topBanner');
 
 const GAME_TIME = 30;
-const POP_INTERVAL_MIN = 600;
-const POP_INTERVAL_MAX = 1000;
-const POP_VISIBLE_MS = 900;
-const BAD_CHANCE = 0.18; // chance a popped can is a dirty/obstacle can
+
+// Replace fixed constants with variables driven by difficulty config
 const WIN_THRESHOLD = 10;
-const BAD_PENALTY = 2; // <-- new: points deducted for clicking a dirty jerry can
+const BAD_PENALTY = 2; // points deducted for clicking a dirty jerry can
+
+// difficulty configurations: spawn speed, visible duration, bad can chance
+const DIFFICULTY_CONFIGS = {
+  easy:   { popMin: 900, popMax: 1400, visible: 1200, badChance: 0.12 },
+  normal: { popMin: 600, popMax: 1000, visible: 900,  badChance: 0.18 },
+  master: { popMin: 350, popMax: 700,  visible: 700,  badChance: 0.28 } // "MasterQuest"
+};
+
+// current runtime values (will be set via setDifficulty)
+let popIntervalMin = DIFFICULTY_CONFIGS.normal.popMin;
+let popIntervalMax = DIFFICULTY_CONFIGS.normal.popMax;
+let popVisibleMs = DIFFICULTY_CONFIGS.normal.visible;
+let badChance = DIFFICULTY_CONFIGS.normal.badChance;
+let currentDifficulty = 'normal';
 
 // messages
 const winMessages = [
@@ -169,7 +181,7 @@ function popRandom() {
 	if (cells.length > 1 && idx === lastIndex) idx = (idx + 1) % cells.length;
 	lastIndex = idx;
 	const cell = cells[idx];
-	const isBad = Math.random() < BAD_CHANCE;
+	const isBad = Math.random() < badChance;
 
 	// ensure cell is cleared
 	cell.innerHTML = '';
@@ -185,20 +197,19 @@ function popRandom() {
 		if (svg) { svg.style.width = '100%'; svg.style.height = '100%'; }
 	});
 
-	// NOTE: per-can pointerdown listener removed in favor of a delegated handler on gridEl
-	// auto-hide after POP_VISIBLE_MS if not tapped
+	// auto-hide after configured visible time if not tapped
 	setTimeout(() => {
 		if (!cell) return;
 		cell.classList.remove('pop');
 		if (wrapper && wrapper.parentNode) wrapper.remove();
-	}, POP_VISIBLE_MS);
+	}, popVisibleMs);
 }
 
 // spawn loop that schedules next pop
 function scheduleNextPop() {
 	if (!running) return;
 	popRandom();
-	const next = randInt(POP_INTERVAL_MIN, POP_INTERVAL_MAX);
+	const next = randInt(popIntervalMin, popIntervalMax);
 	popTimer = setTimeout(scheduleNextPop, next);
 }
 
@@ -523,4 +534,153 @@ if (gridEl) {
 	});
 }
 
-// ---
+// wire reset button and difficulty selector (listeners added once)
+const resetBtn = document.getElementById('resetBtn');
+const difficultySelect = document.getElementById('difficultySelect');
+
+resetBtn?.addEventListener('click', () => {
+	// reset state and immediately restart the game with current difficulty
+	resetGame();
+	setTimeout(() => {
+		// ensure difficulty is applied and then start
+		setDifficulty(currentDifficulty);
+		startGame();
+	}, 120);
+});
+
+// change difficulty while idle or running; applies immediately
+difficultySelect?.addEventListener('change', (e) => {
+	const val = (e.target && e.target.value) || 'normal';
+	setDifficulty(val);
+	// if running, restart spawn loop with new timings to apply immediately
+	if (running) {
+		clearTimeout(popTimer);
+		popTimer = null;
+		// schedule a fresh pop using new interval values
+		scheduleNextPop();
+	}
+});
+
+// ensure initial difficulty is applied on load
+setDifficulty(currentDifficulty);
+
+// --- Unified setDifficulty function (used by UI and internal logic) ---
+function setDifficulty(level) {
+  if (!DIFFICULTY_CONFIGS[level]) level = 'normal';
+  currentDifficulty = level;
+  const cfg = DIFFICULTY_CONFIGS[level];
+  popIntervalMin = cfg.popMin;
+  popIntervalMax = cfg.popMax;
+  popVisibleMs = cfg.visible;
+  badChance = cfg.badChance;
+  // update UI hint
+  showAchievement(`Difficulty: ${level === 'master' ? 'MasterQuest' : level.charAt(0).toUpperCase() + level.slice(1)}`, 900);
+}
+
+// --- Full confetti implementation (replaces stubs) ---
+let _confettiCanvas = null;
+let _confettiCtx = null;
+let _confettiParticles = [];
+let _confettiAnim = null;
+
+function _createConfettiCanvas() {
+	if (_confettiCanvas) return;
+	_confettiCanvas = document.createElement('canvas');
+	_confettiCanvas.className = 'confetti-canvas';
+	_confettiCanvas.style.position = 'fixed';
+	_confettiCanvas.style.inset = '0';
+	_confettiCanvas.style.pointerEvents = 'none';
+	_confettiCanvas.style.zIndex = '60';
+	document.body.appendChild(_confettiCanvas);
+	_confettiCtx = _confettiCanvas.getContext('2d');
+	function resize() {
+		_confettiCanvas.width = window.innerWidth;
+		_confettiCanvas.height = window.innerHeight;
+	}
+	resize();
+	window.addEventListener('resize', resize);
+}
+
+function _spawnConfetti(count = 80) {
+	if (!_confettiCtx) _createConfettiCanvas();
+	const colors = ['#FFC907','#2E9DF7','#8BD1CB','#4FCB53','#072b3a'];
+	for (let i = 0; i < count; i++) {
+		_confettiParticles.push({
+			x: Math.random() * _confettiCanvas.width,
+			y: -10 - Math.random() * 300,
+			vx: (Math.random() - 0.5) * 8,
+			vy: 2 + Math.random() * 6,
+			rot: Math.random() * Math.PI * 2,
+			vrot: (Math.random() - 0.5) * 0.3,
+			w: 6 + Math.random() * 12,
+			h: 8 + Math.random() * 8,
+			color: colors[Math.floor(Math.random() * colors.length)],
+			ttl: 80 + Math.floor(Math.random() * 120)
+		});
+	}
+	if (!_confettiAnim) _confettiLoop();
+}
+
+function _confettiLoop() {
+	if (!_confettiCtx) return;
+	const ctx = _confettiCtx;
+	const canvas = _confettiCanvas;
+	ctx.clearRect(0,0,canvas.width,canvas.height);
+	for (let i = _confettiParticles.length - 1; i >= 0; i--) {
+		const p = _confettiParticles[i];
+		p.x += p.vx;
+		p.y += p.vy;
+		p.vy += 0.09; // gravity
+		p.rot += p.vrot;
+		p.ttl--;
+		ctx.save();
+		ctx.translate(p.x, p.y);
+		ctx.rotate(p.rot);
+		ctx.fillStyle = p.color;
+		ctx.fillRect(-p.w/2, -p.h/2, p.w, p.h);
+		ctx.restore();
+		if (p.y > canvas.height + 60 || p.ttl <= 0) {
+			_confettiParticles.splice(i, 1);
+		}
+	}
+	if (_confettiParticles.length === 0) {
+		// stop animation and remove canvas shortly
+		cancelAnimationFrame(_confettiAnim);
+		_confettiAnim = null;
+		setTimeout(() => {
+			if (_confettiCanvas && _confettiParticles.length === 0) {
+				_confettiCanvas.remove();
+				_confettiCanvas = null;
+				_confettiCtx = null;
+			}
+		}, 400);
+		return;
+	}
+	_confettiAnim = requestAnimationFrame(_confettiLoop);
+}
+
+function launchConfettiBurst(count = 100) {
+	_spawnConfetti(count);
+}
+
+// stop and clear any running confetti immediately
+function stopConfetti() {
+	if (_confettiAnim) cancelAnimationFrame(_confettiAnim);
+	_confettiAnim = null;
+	_confettiParticles.length = 0;
+	if (_confettiCanvas) {
+		_confettiCanvas.remove();
+		_confettiCanvas = null;
+		_confettiCtx = null;
+	}
+}
+
+// initial UI
+updateHUD();
+clearAllPops();
+
+// --- Extracted tap handling so keyboard and pointer share logic ---
+function handleCanTap(can) {
+	if (!can) return;
+	// prevent double-tap
+	if

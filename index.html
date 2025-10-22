@@ -35,6 +35,17 @@
 		<section class="hud">
 			<div class="score">Score: <span id="score">0</span></div>
 			<div class="timer">Time: <span id="time">30</span>s</div>
+
+			<!-- added: reset button to restart immediately and difficulty selector -->
+			<div style="display:flex; gap:8px; align-items:center;">
+				<button id="resetBtn" class="start-btn" title="Reset and restart">Reset</button>
+				<label for="difficultySelect" style="font-weight:600; color:var(--cw-dark); font-size:0.95rem; margin-left:6px;">Difficulty</label>
+				<select id="difficultySelect" aria-label="Select difficulty" style="padding:6px 8px; border-radius:8px; border:1px solid rgba(7,43,58,0.08); background:white;">
+					<option value="easy">Easy</option>
+					<option value="normal" selected>Normal</option>
+					<option value="master">MasterQuest</option>
+				</select>
+			</div>
 		</section>
 
 		<section id="gameField" class="game-field" aria-live="polite">
