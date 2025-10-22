@@ -35,29 +35,30 @@
 		<section class="hud">
 			<div class="score">Score: <span id="score">0</span></div>
 			<div class="timer">Time: <span id="time">30</span>s</div>
-			<!-- Reset button removed — Try again (replay) remains in the overlay -->
 		</section>
 
 		<section id="gameField" class="game-field" aria-live="polite">
 			<!-- whack-a-mole 3x3 grid -->
 			<div class="game-grid" id="gameGrid" aria-hidden="false">
-				<!-- cells will be populated by JS; keeping static markup so CSS anchors exist -->
-				<div class="grid-cell" data-index="0"></div>
-				<div class="grid-cell" data-index="1"></div>
-				<div class="grid-cell" data-index="2"></div>
-				<div class="grid-cell" data-index="3"></div>
-				<div class="grid-cell" data-index="4"></div>
-				<div class="grid-cell" data-index="5"></div>
-				<div class="grid-cell" data-index="6"></div>
-				<div class="grid-cell" data-index="7"></div>
-				<div class="grid-cell" data-index="8"></div>
+				<!-- make each cell keyboard-focusable so users can press Enter/Space -->
+				<div class="grid-cell" data-index="0" tabindex="0"></div>
+				<div class="grid-cell" data-index="1" tabindex="0"></div>
+				<div class="grid-cell" data-index="2" tabindex="0"></div>
+				<div class="grid-cell" data-index="3" tabindex="0"></div>
+				<div class="grid-cell" data-index="4" tabindex="0"></div>
+				<div class="grid-cell" data-index="5" tabindex="0"></div>
+				<div class="grid-cell" data-index="6" tabindex="0"></div>
+				<div class="grid-cell" data-index="7" tabindex="0"></div>
+				<div class="grid-cell" data-index="8" tabindex="0"></div>
 			</div>
 
 			<div id="achievement" class="achievement" aria-live="polite"></div>
 
-			<div class="progress" aria-hidden="true">
+			<!-- progress bar: add ARIA role and numeric percent element -->
+			<div id="goalProgress" class="progress" role="progressbar" aria-label="Progress toward goal" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
 				<div id="progress-fill" class="progress-fill" style="width:0%"></div>
 			</div>
+			<div class="progress-text" aria-hidden="true"><span id="progressPercent">0%</span> toward goal</div>
 		</section>
 	</main>
 

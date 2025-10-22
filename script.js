@@ -70,6 +70,18 @@ function updateHUD() {
 	const pct = Math.min(100, Math.round((score / WIN_THRESHOLD) * 100));
 	if (progressFill) progressFill.style.width = pct + '%';
 
+	// update accessible progress attributes and visible percent
+	const progressRoot = document.getElementById('goalProgress');
+	const percentEl = document.getElementById('progressPercent');
+	if (progressRoot) progressRoot.setAttribute('aria-valuenow', String(pct));
+	if (percentEl) percentEl.textContent = `${pct}%`;
+
+	// toggle complete styling when goal reached
+	if (progressRoot) {
+		if (pct >= 100) progressRoot.classList.add('complete');
+		else progressRoot.classList.remove('complete');
+	}
+
 	// pulse the score when it changes
 	if (scoreEl) {
 		scoreEl.classList.add('updated');
@@ -450,48 +462,65 @@ function stopConfetti() {
 updateHUD();
 clearAllPops();
 
+// --- Extracted tap handling so keyboard and pointer share logic ---
+function handleCanTap(can) {
+	if (!can) return;
+	// prevent double-tap
+	if (can.classList.contains('tapped')) return;
+	can.classList.add('tapped');
+
+	// visual tap
+	can.classList.add('tap-effect');
+
+	// determine wrapper + cell
+	const wrapper = can.parentElement;
+	const cell = wrapper?.parentElement;
+
+	const isBad = can.dataset.bad === '1' || can.classList.contains('obstacle');
+
+	if (isBad) {
+		// show silhouette then remove
+		can.classList.add('silhouette');
+		setTimeout(() => {
+			if (cell) cell.classList.remove('pop');
+			if (wrapper) wrapper.remove();
+		}, 220);
+
+		score = Math.max(0, score - BAD_PENALTY);
+		showAchievement(`-${BAD_PENALTY} (dirty can)`);
+	} else {
+		setTimeout(() => {
+			if (cell) cell.classList.remove('pop');
+			if (wrapper) wrapper.remove();
+		}, 120);
+
+		score += 1;
+		peakScore = Math.max(peakScore, score);
+		if (milestones[score]) showAchievement(milestones[score]);
+		else showAchievement('+1');
+	}
+
+	updateHUD();
+}
+
 // Delegated pointer handler — centralizes tapping logic and prevents attaching many listeners.
-// Uses data-bad or .obstacle class to determine penalty.
 if (gridEl) {
 	gridEl.addEventListener('pointerdown', (e) => {
 		const can = e.target.closest('.water-can');
 		if (!can || !gridEl.contains(can)) return;
-
-		// prevent double-tap
-		if (can.classList.contains('tapped')) return;
-		can.classList.add('tapped');
-
-		// visual tap
-		can.classList.add('tap-effect');
-
-		// determine wrapper + cell
-		const wrapper = can.parentElement;
-		const cell = wrapper?.parentElement;
-
-		const isBad = can.dataset.bad === '1' || can.classList.contains('obstacle');
-
-		if (isBad) {
-			// show silhouette then remove
-			can.classList.add('silhouette');
-			setTimeout(() => {
-				if (cell) cell.classList.remove('pop');
-				if (wrapper) wrapper.remove();
-			}, 220);
-
-			score = Math.max(0, score - BAD_PENALTY);
-			showAchievement(`-${BAD_PENALTY} (dirty can)`);
-		} else {
-			setTimeout(() => {
-				if (cell) cell.classList.remove('pop');
-				if (wrapper) wrapper.remove();
-			}, 120);
-
-			score += 1;
-			peakScore = Math.max(peakScore, score);
-			if (milestones[score]) showAchievement(milestones[score]);
-			else showAchievement('+1');
-		}
-
-		updateHUD();
+		handleCanTap(can);
+	});
+	// keyboard support: Enter/Space on a focused grid-cell will attempt to tap the can inside it
+	gridEl.addEventListener('keydown', (e) => {
+		if (e.code !== 'Enter' && e.code !== 'Space') return;
+		const focused = document.activeElement;
+		if (!focused || !focused.classList || !focused.classList.contains('grid-cell')) return;
+		// if a can exists in the cell, trigger the same logic
+		const can = focused.querySelector('.water-can');
+		if (!can) return;
+		e.preventDefault();
+		handleCanTap(can);
 	});
 }
+
+// ---

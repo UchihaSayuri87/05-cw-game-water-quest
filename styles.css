@@ -314,6 +314,21 @@ h1 { text-align:center; font-size:30px; font-weight:bold; color:var(--cw-blue); 
 .progress{ max-width:500px; height:10px; background:#eaeef6; border-radius:8px; margin:14px auto; overflow:hidden; }
 .progress-fill{ height:100%; background: linear-gradient(90deg,var(--cw-blue),var(--cw-light-blue)); width:0%; transition:width 300ms ease; }
 
+/* when progress completes, switch to a green celebration gradient */
+.progress.complete .progress-fill {
+  background: linear-gradient(90deg, var(--cw-green), #2ecb7a);
+  box-shadow: 0 6px 18px rgba(79,203,83,0.12);
+}
+
+/* small visible percent text under the progress bar */
+.progress-text {
+  text-align: center;
+  margin-top: 8px;
+  font-size: 13px;
+  color: var(--cw-blue);
+  font-weight: 700;
+}
+
 /* Top page banner: centers and pads the image, provides subtle elevation */
 .banner-wrapper {
   width: 100%;
