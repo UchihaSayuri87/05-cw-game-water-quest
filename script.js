@@ -17,6 +17,10 @@ const bannerPlayEl = document.getElementById('bannerPlay');
 const topBannerEl = document.getElementById('topBanner');
 const bannerCloseEl = document.getElementById('bannerClose');
 
+// add missing banner auto-hide constants/vars so startBannerAutoHide can reference them
+const BANNER_AUTO_HIDE_MS = 60 * 1000;
+let bannerAutoHideTimer = null;
+
 const GAME_TIME = 30;
 const WIN_THRESHOLD = 10;
 const BAD_PENALTY = 2;
@@ -567,13 +571,13 @@ topBannerEl?.addEventListener('click', (e) => {
 const resetBtn = document.getElementById('resetBtn');
 const difficultySelect = document.getElementById('difficultySelect');
 
+// When Reset is clicked refresh the page so the UI returns to the initial loaded state
 resetBtn?.addEventListener('click', () => {
-	// reset state and immediately restart the game with current difficulty
-	resetGame();
-	setTimeout(() => {
-		setDifficulty(currentDifficulty);
-		startGame();
-	}, 120);
+	// clear any timers/state first for cleanliness then reload
+	try { stopConfetti(); } catch (_) {}
+	try { clearTimeout(popTimer); popTimer = null; } catch (_) {}
+	try { clearInterval(countdownTimer); countdownTimer = null; } catch (_) {}
+	location.reload();
 });
 
 difficultySelect?.addEventListener('change', (e) => {
@@ -781,6 +785,13 @@ function overlayHide() {
 const tutorialBtn = document.getElementById('tutorialBtn');
 const tutorialPanel = document.getElementById('tutorialPanel');
 const closeTutorialBtn = document.getElementById('closeTutorialBtn');
+const skipTutorialBtn = document.getElementById('skipTutorialBtn');
+const dontShowTutorialCheckbox = document.getElementById('dontShowTutorial');
+
+// If the user opted out previously, hide the tutorial trigger button
+if (localStorage.getItem('dontShowTutorial') === '1') {
+  try { if (tutorialBtn && tutorialBtn.parentElement) tutorialBtn.style.display = 'none'; } catch(_) {}
+}
 
 tutorialBtn?.addEventListener('click', (e) => {
   e?.preventDefault();
@@ -793,7 +804,25 @@ tutorialBtn?.addEventListener('click', (e) => {
 // close tutorial button
 closeTutorialBtn?.addEventListener('click', (e) => {
   e?.preventDefault();
+  // persist preference if checked
+  if (dontShowTutorialCheckbox && dontShowTutorialCheckbox.checked) {
+    try { localStorage.setItem('dontShowTutorial', '1'); } catch(_) {}
+    if (tutorialBtn) tutorialBtn.style.display = 'none';
+  }
   overlayHide();
+});
+
+// skip & play: persist preference if checked, close tutorial and start game
+skipTutorialBtn?.addEventListener('click', (e) => {
+  e?.preventDefault();
+  if (dontShowTutorialCheckbox && dontShowTutorialCheckbox.checked) {
+    try { localStorage.setItem('dontShowTutorial', '1'); } catch(_) {}
+    if (tutorialBtn) tutorialBtn.style.display = 'none';
+  }
+  overlayHide();
+  hideBanner();
+  // small delay so overlay hide/focus restoration runs before starting the game
+  setTimeout(() => startGame(), 120);
 });
 
 // allow clicking outside the modal panel (on the overlay backdrop) to close it

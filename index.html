@@ -132,7 +132,16 @@
 					<li>Keyboard: TAB to a cell and press Enter/Space to tap the can inside it.</li>
 				</ul>
 				<p class="tutorial-note">Tip: try Normal or MasterQuest for faster spawns once you get comfortable.</p>
-				<button id="closeTutorialBtn" type="button" class="start-btn">Close</button>
+
+				<!-- new: option to skip tutorial in future and a quick "skip & play" action -->
+				<div style="display:flex; gap:8px; align-items:center; justify-content:center; margin-top:10px;">
+					<label style="display:flex; align-items:center; gap:8px; font-size:14px;">
+						<input id="dontShowTutorial" type="checkbox" />
+						<span>Don't show again</span>
+					</label>
+					<button id="skipTutorialBtn" type="button" class="start-btn">Skip &amp; Play</button>
+					<button id="closeTutorialBtn" type="button" class="start-btn">Close</button>
+				</div>
 			</div>
  		</div>
  	</div>
