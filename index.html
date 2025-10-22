@@ -33,6 +33,8 @@
 
  	<!-- new top banner (uses img/banner.png). If it fails to load the inline onerror adds .banner-broken) -->
  	<div class="banner-wrapper">
+		<!-- banner close: allows dismissing a stuck banner -->
+		<button id="bannerClose" type="button" class="banner-close" aria-label="Close banner">✕</button>
  		<!-- inline SVG banner fallback to avoid 404 when img/banner.png is missing -->
  		<img id="topBanner"
  		     class="top-banner"

@@ -71,6 +71,35 @@ body, p, .tagline, .score, .timer, .achievement {
   background: linear-gradient(180deg, rgba(255,200,7,0.12), rgba(255,200,7,0.04));
 }
 
+/* ensure banner wrapper can contain an absolutely-positioned close button */
+.banner-wrapper {
+  position: relative;
+}
+
+/* banner close button (small, high-contrast tappable target) */
+.banner-close {
+  position: absolute;
+  right: 10px;
+  top: 10px;
+  z-index: 80;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  border: none;
+  background: rgba(255,255,255,0.95);
+  box-shadow: 0 6px 18px rgba(2,6,23,0.08);
+  font-size: 18px;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+.banner-close:focus {
+  outline: 3px solid rgba(255,201,7,0.22);
+  outline-offset: 2px;
+}
+
 /* Make the game-wrap sit nicely inside the card */
 .game-wrap{
   width:100%;

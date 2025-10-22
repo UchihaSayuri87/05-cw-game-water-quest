@@ -15,6 +15,7 @@ const resultMessage = document.getElementById('resultMessage');
 const bannerWrapEl = document.querySelector('.banner-wrapper');
 const bannerPlayEl = document.getElementById('bannerPlay');
 const topBannerEl = document.getElementById('topBanner');
+const bannerCloseEl = document.getElementById('bannerClose');
 
 const GAME_TIME = 30;
 const WIN_THRESHOLD = 10;
@@ -783,6 +784,19 @@ overlay?.addEventListener('pointerdown', (e) => {
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape' && overlay && !overlay.classList.contains('hidden')) {
     overlayHide();
+  }
+});
+
+// allow Escape to dismiss banner when visible (does not affect overlay handling)
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    try {
+      if (bannerWrapEl && !bannerWrapEl.classList.contains('hidden')) {
+        hideBanner();
+        return;
+      }
+    } catch (_) { /* ignore */ }
+    // existing overlay Escape handler remains elsewhere — no change needed
   }
 });
 
