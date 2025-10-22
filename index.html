@@ -75,28 +75,11 @@
  		</div>
  	</div>
 
-	<!-- How to play / tutorial (collapsible, accessible) -->
-	<details class="tutorial" aria-labelledby="tutorial-summary">
-	  <summary id="tutorial-summary">How to play — quick tutorial</summary>
-	  <div class="tutorial-body">
-	    <p><strong>Goal:</strong> Tap the clean yellow jerry-cans to earn points. Reach 10 points to win.</p>
-	    <ul>
-	      <li>Each clean can tapped = +1 point.</li>
-	      <li>Dirty/obstacle cans deduct points (avoid them).</li>
-	      <li>You have 30 seconds — a countdown timer is shown in the HUD.</li>
-	      <li>Use the <em>Difficulty</em> selector to change spawn rate and challenge; use <em>Reset</em> to restart immediately.</li>
-	      <li>Keyboard: TAB to a cell and press Enter/Space to tap the can inside it.</li>
-	    </ul>
-	    <p class="tutorial-note">Tip: try Normal or MasterQuest for faster spawns once you get comfortable.</p>
-	  </div>
-	</details>
- 
-	<main class="game-wrap">
 		<section class="hud">
 			<div class="score">Score: <span id="score">0</span></div>
 			<div class="timer">Time: <span id="time">30</span>s</div>
 
-			<!-- added: reset button to restart immediately and difficulty selector -->
+			<!-- added: reset button to restart immediately, difficulty selector, and tutorial button -->
 			<div style="display:flex; gap:8px; align-items:center;">
 				<button id="resetBtn" class="start-btn" title="Reset and restart">Reset</button>
 				<label for="difficultySelect" style="font-weight:600; color:var(--cw-dark); font-size:0.95rem; margin-left:6px;">Difficulty</label>
@@ -105,6 +88,7 @@
 					<option value="normal" selected>Normal</option>
 					<option value="master">MasterQuest</option>
 				</select>
+				<button id="tutorialBtn" class="start-btn" title="How to play">How to play</button>
 			</div>
 		</section>
 
@@ -134,16 +118,31 @@
 	</main>
 
 	<div id="overlay" class="overlay hidden" role="dialog" aria-modal="true">
-		<div class="overlay-content">
+		<!-- End-game panel -->
+		<div id="endPanel" class="overlay-content">
 			<h2 id="resultTitle">Time's up!</h2>
 			<p id="resultMessage"></p>
 			<p class="final-score">Final score: <span id="finalScore">0</span></p>
-
-			<!-- removed leaderboard form and section to simplify/debug gameplay -->
-
 			<button id="replayBtn" class="start-btn">Play again</button>
 		</div>
-	</div>
+
+		<!-- Tutorial panel (hidden by default) -->
+		<div id="tutorialPanel" class="overlay-content hidden" aria-hidden="true">
+			<h2>How to play</h2>
+			<div class="tutorial-body">
+				<p><strong>Goal:</strong> Tap the clean yellow jerry-cans to earn points. Reach 10 points to win.</p>
+				<ul>
+					<li>Each clean can tapped = +1 point.</li>
+					<li>Dirty/obstacle cans deduct points (avoid them).</li>
+					<li>You have 30 seconds — a countdown timer is shown in the HUD.</li>
+					<li>Use the <em>Difficulty</em> selector to change spawn rate and challenge; use <em>Reset</em> to restart immediately.</li>
+					<li>Keyboard: TAB to a cell and press Enter/Space to tap the can inside it.</li>
+				</ul>
+				<p class="tutorial-note">Tip: try Normal or MasterQuest for faster spawns once you get comfortable.</p>
+				<button id="closeTutorialBtn" class="start-btn">Close</button>
+			</div>
+		</div>
+ 	</div>
 	<!-- /container -->
 
 	<script src="script.js"></script>

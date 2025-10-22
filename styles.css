@@ -399,49 +399,55 @@ h1 { text-align:center; font-size:30px; font-weight:bold; color:var(--cw-blue); 
   padding: 24px; /* increased padding */
 }
 
-/* Ensure both attribute-based and class-based hiding work
-   (some scripts use setAttribute('hidden') and some toggle the 'hidden' class) */
-.overlay[hidden] { display: none; }
-.overlay.hidden { display: none; }
-
-/* Generic utility used by script toggles */
-.hidden { display: none !important; }
-
-/* Progress bar under stats to show goal progress */
-.progress{ max-width:500px; height:10px; background:#eaeef6; border-radius:8px; margin:14px auto; overflow:hidden; }
-.progress-fill{ height:100%; background: linear-gradient(90deg,var(--cw-blue),var(--cw-light-blue)); width:0%; transition:width 300ms ease; }
-
-/* when progress completes, switch to a green celebration gradient */
-.progress.complete .progress-fill {
-  background: linear-gradient(90deg, var(--cw-green), #2ecb7a);
-  box-shadow: 0 6px 18px rgba(79,203,83,0.12);
-  transform-origin: left;
-  will-change: transform, box-shadow;
-  animation: progress-complete 900ms cubic-bezier(.2,.9,.2,1);
+/* overlay: make dialogs fit and scroll on small screens, improve focus visibility */
+.overlay {
+  padding: 18px;
+  box-sizing: border-box;
 }
 
-/* small visible percent text under the progress bar */
-.progress-text {
-  text-align: center;
-  margin-top: 8px;
-  font-size: 13px;
-  color: var(--cw-blue);
-  font-weight: 700;
+/* overlay content sizing & scroll for small viewports */
+.overlay .overlay-content {
+  width: min(680px, 92%);
+  max-width: 680px;
+  max-height: calc(100vh - 120px);
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
-/* make grid cells show a clear focus ring for keyboard users */
-.grid-cell:focus-visible {
+/* when overlay shows on small screens, position near top so content is visible */
+@media (max-width: 520px) {
+  .overlay { align-items: flex-start; padding-top: 48px; }
+  .overlay .overlay-content { max-height: calc(100vh - 96px); padding: 16px; }
+  .overlay .overlay-content button.start-btn, .overlay .overlay-content .start-btn {
+    width: 100%;
+    padding: 12px 14px;
+    font-size: 15px;
+  }
+}
+
+/* HUD and touch targets: stack controls on narrow screens and enlarge buttons */
+@media (max-width: 520px) {
+  .hud { flex-direction: column; gap: 8px; align-items: stretch; }
+  .hud > div { justify-content: center; }
+  .start-btn, button {
+    padding: 12px 14px;
+    font-size: 15px;
+    touch-action: manipulation;
+  }
+  .brand-strip { padding: 8px; gap: 10px; }
+}
+
+/* make grid cells slightly smaller on narrow screens to fit comfortably */
+@media (max-width: 420px) {
+  .game-field { padding: 12px; height: auto; min-height: 220px; }
+  .grid-cell { min-height: 96px; }
+  .grid-cell .water-can { width: 48px; height: 48px; }
+}
+
+/* clearer focus styles for interactive items */
+:focus {
   outline: 3px solid var(--focus-ring);
-  outline-offset: 4px;
-  border-radius: 10px;
-  box-shadow: 0 8px 20px rgba(2,6,23,0.06);
-}
-
-/* subtle animation used when progress completes */
-@keyframes progress-complete {
-  0% { transform: scaleX(0.98); box-shadow: 0 4px 12px rgba(79,203,83,0.06); }
-  50% { transform: scaleX(1.02); box-shadow: 0 12px 30px rgba(79,203,83,0.12); }
-  100% { transform: scaleX(1); box-shadow: 0 6px 18px rgba(79,203,83,0.12); }
+  outline-offset: 3px;
 }
 
 /* Top page banner: centers and pads the image, provides subtle elevation */

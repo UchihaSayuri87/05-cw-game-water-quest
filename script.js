@@ -248,20 +248,29 @@ function startGame() {
 	}
 }
 
+// replace endGame to use overlayShow for accessibility (merge in place of prior endGame)
 function endGame() {
+	// stop running state and timers
 	running = false;
 	clearTimeout(popTimer); popTimer = null;
 	clearInterval(countdownTimer); countdownTimer = null;
+
+	// clear visible pops
 	clearAllPops();
 
+	// show results in endPanel using overlay helpers
 	if (finalScore) finalScore.textContent = score;
 	const isWin = score >= WIN_THRESHOLD;
 	const pool = isWin ? winMessages : loseMessages;
 	const msg = pool[Math.floor(Math.random() * pool.length)];
 	if (resultTitle) resultTitle.textContent = isWin ? 'You win!' : 'Try again';
 	if (resultMessage) resultMessage.textContent = msg;
-	if (overlay) overlay.classList.remove('hidden');
 
+	// show overlay end panel via helper (endPanel exists in DOM)
+	const endPanelEl = document.getElementById('endPanel');
+	if (endPanelEl) overlayShow(endPanelEl);
+
+	// confetti for notable achievements:
 	if (peakScore >= 10 && score >= 10) {
 		setTimeout(() => launchConfettiBurst(140), 220);
 	}
@@ -435,7 +444,7 @@ if (gridEl) {
 
 // --- UI wiring (replay, reset, difficulty) ---
 replayBtn?.addEventListener('click', () => {
-	if (overlay) overlay.classList.add('hidden');
+	overlayHide();
 	hideBanner();
 	setTimeout(startGame, 140);
 });
@@ -488,6 +497,117 @@ difficultySelect?.addEventListener('change', (e) => {
 		scheduleNextPop();
 	}
 });
+
+// --- modal helpers: focus trap, aria-hide/inert and show/hide overlay panels ---
+let _focusTrapListener = null;
+let _previouslyFocused = null;
+const _appRegions = () => document.querySelectorAll('.brand-strip, .banner-wrapper, .game-wrap, .hud');
+
+function _getFocusable(container) {
+  return Array.from(container.querySelectorAll('a[href], button:not([disabled]), textarea, input, select, [tabindex]:not([tabindex="-1"])'))
+    .filter(el => el.offsetParent !== null);
+}
+
+function _trapFocus(container) {
+  const focusables = _getFocusable(container);
+  if (!focusables.length) return;
+  const first = focusables[0];
+  const last = focusables[focusables.length - 1];
+  // focus the first element
+  first.focus();
+
+  _focusTrapListener = (e) => {
+    if (e.key !== 'Tab') return;
+    if (e.shiftKey) {
+      if (document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      }
+    } else {
+      if (document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    }
+  };
+  document.addEventListener('keydown', _focusTrapListener);
+}
+
+function _releaseFocusTrap() {
+  if (_focusTrapListener) {
+    document.removeEventListener('keydown', _focusTrapListener);
+    _focusTrapListener = null;
+  }
+}
+
+function overlayShow(panelEl) {
+  if (!overlay || !panelEl) return;
+  // save focus
+  _previouslyFocused = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+
+  // mark app regions as hidden/inert
+  _appRegions().forEach(el => {
+    try { el.setAttribute('aria-hidden', 'true'); if ('inert' in el) el.inert = true; } catch(_) {}
+  });
+
+  // show requested panel and overlay
+  overlay.classList.remove('hidden');
+  // hide all overlay panels then reveal target
+  Array.from(overlay.querySelectorAll('.overlay-content')).forEach(p => p.classList.add('hidden'));
+  panelEl.classList.remove('hidden');
+  panelEl.removeAttribute('aria-hidden');
+
+  // trap focus inside panel
+  _trapFocus(panelEl);
+}
+
+function overlayHide() {
+  if (!overlay) return;
+  // hide overlay and its panels
+  overlay.classList.add('hidden');
+  Array.from(overlay.querySelectorAll('.overlay-content')).forEach(p => {
+    p.classList.add('hidden');
+    p.setAttribute('aria-hidden', 'true');
+  });
+
+  // release inert/aria-hidden on app regions
+  _appRegions().forEach(el => {
+    try { el.removeAttribute('aria-hidden'); if ('inert' in el) el.inert = false; } catch(_) {}
+  });
+
+  // restore focus
+  _releaseFocusTrap();
+  if (_previouslyFocused) {
+    try { _previouslyFocused.focus(); } catch (_) {}
+    _previouslyFocused = null;
+  }
+}
+
+// --- Tutorial modal wiring ---
+const tutorialBtn = document.getElementById('tutorialBtn');
+const tutorialPanel = document.getElementById('tutorialPanel');
+const closeTutorialBtn = document.getElementById('closeTutorialBtn');
+
+tutorialBtn?.addEventListener('click', (e) => {
+  e?.preventDefault();
+  const panel = document.getElementById('tutorialPanel');
+  if (panel) overlayShow(panel);
+});
+closeTutorialBtn?.addEventListener('click', (e) => {
+  e?.preventDefault();
+  overlayHide();
+});
+
+// Escape handling: close overlay when visible (keeps focus/inert consistent)
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && overlay && !overlay.classList.contains('hidden')) {
+    overlayHide();
+  }
+});
+
+// Ensure endPanel is hidden on load (overlay controlled by script)
+const endPanel = document.getElementById('endPanel');
+if (endPanel) endPanel.classList.add('hidden');
 
 // ensure initial difficulty is applied on load
 setDifficulty(currentDifficulty);
