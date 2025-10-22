@@ -498,10 +498,44 @@ difficultySelect?.addEventListener('change', (e) => {
 	}
 });
 
-// --- modal helpers: focus trap, aria-hide/inert and show/hide overlay panels ---
+// --- inert fallback + modal helpers: focus trap, aria-hide and show/hide overlay panels ---
 let _focusTrapListener = null;
 let _previouslyFocused = null;
+let _wasRunningBeforeModal = false;
 const _appRegions = () => document.querySelectorAll('.brand-strip, .banner-wrapper, .game-wrap, .hud');
+
+// helper: apply inert to container (fallback: make focusable descendants tabindex=-1)
+function _applyInert(el, inert) {
+  try {
+    if ('inert' in el) {
+      el.inert = inert;
+      return;
+    }
+  } catch (_) {}
+  // fallback: toggle aria-hidden and manage tabindex for focusable descendants
+  if (inert) el.setAttribute('aria-hidden', 'true');
+  else el.removeAttribute('aria-hidden');
+
+  const focusableSelector = 'a[href], button:not([disabled]), textarea, input, select, [tabindex]';
+  const focusables = Array.from(el.querySelectorAll(focusableSelector));
+  focusables.forEach(node => {
+    if (inert) {
+      // store previous tabIndex
+      if (!node.hasAttribute('data-prev-tabindex')) node.setAttribute('data-prev-tabindex', node.getAttribute('tabindex') ?? '');
+      node.setAttribute('tabindex', '-1');
+    } else {
+      // restore
+      if (node.hasAttribute('data-prev-tabindex')) {
+        const prev = node.getAttribute('data-prev-tabindex');
+        if (prev === '') node.removeAttribute('tabindex');
+        else node.setAttribute('tabindex', prev);
+        node.removeAttribute('data-prev-tabindex');
+      } else {
+        node.removeAttribute('tabindex');
+      }
+    }
+  });
+}
 
 function _getFocusable(container) {
   return Array.from(container.querySelectorAll('a[href], button:not([disabled]), textarea, input, select, [tabindex]:not([tabindex="-1"])'))
@@ -540,19 +574,41 @@ function _releaseFocusTrap() {
   }
 }
 
+// pause game (preserve timeLeft & score) and clear timers
+function _pauseGameForModal() {
+  _wasRunningBeforeModal = running;
+  if (!running) return;
+  clearTimeout(popTimer); popTimer = null;
+  clearInterval(countdownTimer); countdownTimer = null;
+  running = false;
+}
+
+// resume game if it was running when modal opened
+function _resumeGameFromModal() {
+  if (!_wasRunningBeforeModal) return;
+  running = true;
+  // restart countdown and pop scheduling from current timeLeft
+  startCountdown();
+  scheduleNextPop();
+  _wasRunningBeforeModal = false;
+}
+
 function overlayShow(panelEl) {
   if (!overlay || !panelEl) return;
   // save focus
   _previouslyFocused = document.activeElement instanceof HTMLElement ? document.activeElement : null;
 
-  // mark app regions as hidden/inert
+  // pause game while modal visible
+  _pauseGameForModal();
+
+  // mark app regions as inert (use fallback)
   _appRegions().forEach(el => {
-    try { el.setAttribute('aria-hidden', 'true'); if ('inert' in el) el.inert = true; } catch(_) {}
+    try { _applyInert(el, true); } catch(_) {}
   });
 
-  // show requested panel and overlay
+  // show requested panel and overlay, set ARIA
   overlay.classList.remove('hidden');
-  // hide all overlay panels then reveal target
+  overlay.setAttribute('aria-hidden', 'false');
   Array.from(overlay.querySelectorAll('.overlay-content')).forEach(p => p.classList.add('hidden'));
   panelEl.classList.remove('hidden');
   panelEl.removeAttribute('aria-hidden');
@@ -563,16 +619,18 @@ function overlayShow(panelEl) {
 
 function overlayHide() {
   if (!overlay) return;
-  // hide overlay and its panels
+
+  // hide overlay and panels, set ARIA
   overlay.classList.add('hidden');
+  overlay.setAttribute('aria-hidden', 'true');
   Array.from(overlay.querySelectorAll('.overlay-content')).forEach(p => {
     p.classList.add('hidden');
     p.setAttribute('aria-hidden', 'true');
   });
 
-  // release inert/aria-hidden on app regions
+  // release inert/aria-hidden on app regions (fallback)
   _appRegions().forEach(el => {
-    try { el.removeAttribute('aria-hidden'); if ('inert' in el) el.inert = false; } catch(_) {}
+    try { _applyInert(el, false); } catch(_) {}
   });
 
   // restore focus
@@ -581,6 +639,9 @@ function overlayHide() {
     try { _previouslyFocused.focus(); } catch (_) {}
     _previouslyFocused = null;
   }
+
+  // resume game if it was paused by modal
+  _resumeGameFromModal();
 }
 
 // --- Tutorial modal wiring ---

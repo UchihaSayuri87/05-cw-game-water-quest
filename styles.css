@@ -174,14 +174,20 @@ h1 { text-align:center; font-size:30px; font-weight:bold; color:var(--cw-blue); 
   border: 2px solid rgba(46,157,247,0.08);
 }
 
-/* Game grid / legacy grid cells (from previous version) */
+/* Game grid: use auto-fit so columns adapt to viewport and small screens */
 .game-grid {
-  width: min(680px, 96%);
+  width: min(720px, 96%);
   display: grid;
-  /* fixed 3 columns on larger screens; each column has a sensible minimum */
-  grid-template-columns: repeat(3, minmax(140px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
   gap: clamp(8px, 1.6vw, 16px);
   margin: 6px auto;
+}
+
+/* Ensure water-can is touch-friendly and doesn't block touch actions */
+.grid-cell .water-can {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: rgba(0,0,0,0.06);
+  /* keep existing sizing rule (already defined elsewhere) */
 }
 
 /* medium screens (tablets / small laptops) -> 2 columns */
@@ -193,10 +199,9 @@ h1 { text-align:center; font-size:30px; font-weight:bold; color:var(--cw-blue); 
 
 /* phones / very narrow screens -> 1 column */
 @media (max-width: 420px) {
-  .game-grid {
-    grid-template-columns: 1fr;
-    gap: 10px;
-  }
+  .game-grid { grid-template-columns: repeat(2, minmax(96px, 1fr)); }
+  .grid-cell { min-height: 92px; }
+  .grid-cell .water-can { width: 44px; height: 44px; }
 }
 
 /* Make grid cells responsive in height and touch-friendly */
