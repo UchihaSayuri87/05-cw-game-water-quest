@@ -52,6 +52,16 @@
  					     class="logo"
  					     loading="lazy"
  					     onerror="this.onerror=null; this.src='data:image/svg+xml;utf8,<svg xmlns=&quot;http://www.w3.org/2000/svg&quot; viewBox=&quot;0 0 64 64&quot;><circle cx=&quot;32&quot; cy=&quot;32&quot; r=&quot;30&quot; fill=%27%23ffffff%27 opacity=&quot;0.02&quot;/><path d=&quot;M32 10c6 8 12 14 12 22 0 6.6-5.4 12-12 12s-12-5.4-12-12c0-8 6-14 12-22z&quot; fill=%27%232E9DF7%27/></svg>'; document.documentElement.classList.add('logo-broken');" />
++
++					<!-- jerry-can brand: uses attached image file img/jerry-can-brand.png (fallback to inline SVG) -->
++					<img id="jerryBrand"
++					     src="img/jerry-can-brand.png"
++					     alt="jerry can mark"
++					     class="jerry-brand"
++					     loading="lazy"
++					     role="img"
++					     aria-label="jerry can brand"
++					     onerror="this.onerror=null; this.src='data:image/svg+xml;utf8,<svg xmlns=&quot;http://www.w3.org/2000/svg&quot; viewBox=&quot;0 0 64 64&quot;><rect x=&quot;8&quot; y=&quot;12&quot; width=&quot;48&quot; height=&quot;40&quot; rx=&quot;4&quot; fill=%27%23FFC907%27/><path d=&quot;M20 10h8v6h-8zM40 10h6v6h-6zM24 18h16v28h-16z&quot; fill=%27000%27/></svg>'; document.documentElement.classList.add('jerry-broken');" />
  					<div class="title-block">
  						<h1>Water Drop</h1>
  						<p class="tagline">Tap clean drops, avoid dirty ones — save as many as you can!</p>
@@ -65,6 +75,22 @@
  		</div>
  	</div>
 
+	<!-- How to play / tutorial (collapsible, accessible) -->
+	<details class="tutorial" aria-labelledby="tutorial-summary">
+	  <summary id="tutorial-summary">How to play — quick tutorial</summary>
+	  <div class="tutorial-body">
+	    <p><strong>Goal:</strong> Tap the clean yellow jerry-cans to earn points. Reach 10 points to win.</p>
+	    <ul>
+	      <li>Each clean can tapped = +1 point.</li>
+	      <li>Dirty/obstacle cans deduct points (avoid them).</li>
+	      <li>You have 30 seconds — a countdown timer is shown in the HUD.</li>
+	      <li>Use the <em>Difficulty</em> selector to change spawn rate and challenge; use <em>Reset</em> to restart immediately.</li>
+	      <li>Keyboard: TAB to a cell and press Enter/Space to tap the can inside it.</li>
+	    </ul>
+	    <p class="tutorial-note">Tip: try Normal or MasterQuest for faster spawns once you get comfortable.</p>
+	  </div>
+	</details>
+ 
 	<main class="game-wrap">
 		<section class="hud">
 			<div class="score">Score: <span id="score">0</span></div>

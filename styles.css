@@ -535,6 +535,60 @@ h1 { text-align:center; font-size:30px; font-weight:bold; color:var(--cw-blue); 
 /* keep earlier .site-header spacing so hero and header don't collide */
 .site-header { margin-top: 12px; }
 
+/* jerry brand next to logo: bold, high-contrast black/yellow styling */
+.jerry-brand {
+  width: 56px;
+  height: 56px;
+  object-fit: contain;
+  margin: 0 12px 0 6px;
+  flex: 0 0 auto;
+  border-radius: 8px;
+  box-shadow: 0 10px 30px rgba(2,6,23,0.12);
+  background: linear-gradient(180deg, #000 0%, #111 100%);
+  display: inline-block;
+  /* ensure the visible can looks black/yellow if the image missing (fallback SVG used) */
+}
+
+/* if the real image is present, prefer showing it without the background; use a silhouette boost */
+.jerry-brand[src$=".png"], .jerry-brand[src$=".jpg"], .jerry-brand[src$=".jpeg"] {
+  background: transparent;
+  filter: drop-shadow(0 8px 18px rgba(0,0,0,0.12));
+}
+
+/* visible focus for accessibility */
+.jerry-brand:focus-visible {
+  outline: 3px solid rgba(255,201,7,0.24);
+  outline-offset: 4px;
+  border-radius: 8px;
+}
+
+/* Tutorial details styling */
+.tutorial {
+  max-width: 820px;
+  margin: 8px auto 0;
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: linear-gradient(180deg, rgba(46,157,247,0.03), rgba(46,157,247,0.01));
+  border: 1px solid rgba(46,157,247,0.06);
+  box-shadow: 0 6px 18px rgba(2,6,23,0.04);
+  font-size: 15px;
+}
+.tutorial summary {
+  font-weight: 700;
+  cursor: pointer;
+  list-style: none;
+  outline: none;
+}
+.tutorial .tutorial-body { margin-top: 10px; }
+.tutorial ul { margin: 6px 0 10px 18px; }
+.tutorial .tutorial-note { font-size: 13px; color: #055b7a; font-weight:600; }
+
+/* small screens: keep tutorial compact */
+@media (max-width:520px) {
+  .jerry-brand { width:44px; height:44px; margin-right:8px; }
+  .tutorial { padding: 8px 10px; font-size:14px; }
+}
+
 /* smaller screens: scale down hero */
 @media (max-width:640px){
   .hero-title { font-size: 28px; }
