@@ -803,5 +803,14 @@ h1 { text-align:center; font-size:30px; font-weight:bold; color:var(--cw-blue); 
   filter: drop-shadow(0 8px 18px rgba(2,6,23,0.16));
 }
 
-/* Utility: hide elements when JS toggles the 'hidden' class */
-.hidden { display: none !important; visibility: hidden !important; pointer-events: none !important; }
+/* When a real banner image is available hide the fallback hero */
+.banner-wrapper.banner-with-image .banner-fallback { display: none !important; }
+
+/* When the image failed (banner-broken) hide the top-banner image and show fallback */
+.banner-broken .top-banner { display: none !important; }
+
+/* treat .hidden as a strong hide for JS-driven state */
+.banner-wrapper.hidden { display: none !important; }
+
+/* utility: strong hide used by JS for panels and banners */
+.hidden { display: none !important; visibility: hidden !important; }

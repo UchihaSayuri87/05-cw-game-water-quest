@@ -49,11 +49,22 @@ const loseMessages = [
 	"Not enough drops — give it another shot!",
 	"Keep trying — clean water needs you!"
 ];
-const milestones = {
-	5: "Great start — 5 cans!",
-	10: "Awesome — 10 cans!",
-	15: "Incredible — 15 cans!"
-};
+// replaced the old object map with an ordered array of milestone entries
+const MILESTONES = [
+  { score: 5,  msg: "Great start — 5 cans!" },
+  { score: 10, msg: "Halfway there — 10 cans!" },
+  { score: 15, msg: "Incredible — 15 cans!" }
+];
+
+// runtime set to avoid showing the same milestone multiple times during a session
+let shownMilestones = new Set();
+
+function _populateShownMilestonesFromScore() {
+  shownMilestones.clear();
+  for (const m of MILESTONES) {
+    if (score >= m.score) shownMilestones.add(m.score);
+  }
+}
 
 // state
 let score = 0;
@@ -223,6 +234,9 @@ function startGame() {
 		running = true;
 		peakScore = 0;
 
+		// clear milestone state for a fresh run
+		shownMilestones.clear();
+
 		// hide overlays/banners using centralized helpers so timers/inert states are handled
 		if (overlay) overlay.classList.add('hidden');
 		hideBanner();
@@ -253,10 +267,12 @@ function endGame() {
 
 	// show results in endPanel using overlay helpers
 	if (finalScore) finalScore.textContent = score;
+
+	// explicitly show "win" only when score >= WIN_THRESHOLD, "try again" only when < WIN_THRESHOLD
 	const isWin = score >= WIN_THRESHOLD;
 	const pool = isWin ? winMessages : loseMessages;
 	const msg = pool[Math.floor(Math.random() * pool.length)];
-	if (resultTitle) resultTitle.textContent = isWin ? 'You win!' : 'Try again';
+	if (resultTitle) resultTitle.textContent = isWin ? 'You win!' : (score < WIN_THRESHOLD ? 'Try again' : '');
 	if (resultMessage) resultMessage.textContent = msg;
 
 	// show overlay end panel via helper (endPanel exists in DOM)
@@ -277,6 +293,8 @@ function resetGame() {
 	try { clearAllPops(); } catch (e) {}
 	score = 0;
 	timeLeft = GAME_TIME;
+	// clear milestones when resetting
+	shownMilestones.clear();
 	updateHUD();
 	if (overlay) overlay.classList.add('hidden');
 	if (document.activeElement && document.activeElement instanceof HTMLElement) document.activeElement.blur();
@@ -309,6 +327,33 @@ function startBannerAutoHide() {
 
 // ensure the banner auto-hide begins when script initializes (page loaded)
 startBannerAutoHide();
+
+/* -----------------------------------------
+   Banner: switch between image vs fallback
+   ----------------------------------------- */
+function _updateBannerModeOnLoad() {
+  if (!bannerWrapEl || !topBannerEl) return;
+  // image loaded successfully -> use image, hide fallback hero
+  function showImageMode() {
+    bannerWrapEl.classList.add('banner-with-image');
+    bannerWrapEl.classList.remove('banner-broken');
+  }
+  function showFallbackMode() {
+    bannerWrapEl.classList.remove('banner-with-image');
+    bannerWrapEl.classList.add('banner-broken');
+  }
+
+  if ('complete' in topBannerEl && topBannerEl.complete) {
+    // if naturalWidth available and non-zero, image rendered
+    if (topBannerEl.naturalWidth && topBannerEl.naturalWidth > 0) showImageMode();
+    else showFallbackMode();
+  } else {
+    topBannerEl.addEventListener('load', showImageMode, { once: true });
+    topBannerEl.addEventListener('error', showFallbackMode, { once: true });
+  }
+}
+// call once on init
+_updateBannerModeOnLoad();
 
 // --- Confetti (single consolidated implementation) ---
 let _confettiCanvas = null;
@@ -447,6 +492,8 @@ setTimeout(() => {
 		currentDifficulty = data.currentDifficulty;
 		setDifficulty(currentDifficulty);
 	}
+	// mark milestones already achieved so they don't re-trigger immediately on resume
+	_populateShownMilestonesFromScore();
 	updateHUD();
 }, 50);
 
@@ -509,8 +556,20 @@ function handleCanTap(can) {
 
 		score += 1;
 		peakScore = Math.max(peakScore, score);
-		if (milestones[score]) showAchievement(milestones[score]);
-		else showAchievement('+1');
+
+		// check milestone array (ordered) and show the first milestone reached that wasn't shown yet
+		let milestoneShown = false;
+		for (const m of MILESTONES) {
+			if (score >= m.score && !shownMilestones.has(m.score)) {
+				shownMilestones.add(m.score);
+				showAchievement(m.msg);
+				milestoneShown = true;
+				break;
+			}
+		}
+		if (!milestoneShown) {
+			showAchievement('+1');
+		}
 	}
 
 	updateHUD();
@@ -537,10 +596,18 @@ if (gridEl) {
 }
 
 // --- UI wiring (replay, reset, difficulty) ---
+const closeEndBtn = document.getElementById('closeEndBtn');
+
 replayBtn?.addEventListener('click', () => {
 	overlayHide();
 	hideBanner();
 	setTimeout(startGame, 140);
+});
+
+// allow closing end panel without replay
+closeEndBtn?.addEventListener('click', (e) => {
+  e?.preventDefault();
+  overlayHide();
 });
 
 // keyboard: Space to start when not running
@@ -573,29 +640,6 @@ bannerCloseEl?.addEventListener('click', (e) => {
   e?.preventDefault();
   hideBanner();
   // don't start the game unless the user explicitly presses play
-});
-
-// --- New: Ensure overlays/banners are hidden and controls wired on initial load ---
-// this prevents the banner/tutorial/end panels from "sticking" on first load
-document.addEventListener('DOMContentLoaded', () => {
-  try {
-    // If any overlay panels somehow lack .hidden (or JS added them earlier),
-    // force the overlay into a hidden state so the game area is reachable.
-    overlayHide();
-  } catch (_) { /* ignore */ }
-
-  try {
-    // Hide banner on initial load so the UI is immediately playable.
-    // Users can still open it via bannerPlay if you choose to show again.
-    hideBanner();
-  } catch (_) { /* ignore */ }
-
-  // Wire the new end-panel close button if present
-  const closeEndBtn = document.getElementById('closeEndBtn');
-  closeEndBtn?.addEventListener('click', (ev) => {
-    ev?.preventDefault();
-    overlayHide();
-  });
 });
 
 // wire reset button and difficulty selector (listeners added once)
@@ -733,6 +777,12 @@ function overlayShow(panelEl) {
 
   // trap focus inside the panel immediately (moves focus into the modal)
   _trapFocus(panelEl);
+
+  // move programmatic focus to a prominent action (first button) so close works reliably
+  try {
+    const firstButton = panelEl.querySelector('button, [role="button"], [tabindex]:not([tabindex="-1"])');
+    if (firstButton && typeof firstButton.focus === 'function') firstButton.focus();
+  } catch (_) { /* ignore */ }
 
   // pause game while modal visible
   _pauseGameForModal();
