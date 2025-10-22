@@ -4,32 +4,66 @@
 	<meta charset="utf-8" />
 	<meta name="viewport" content="width=device-width,initial-scale=1" />
 	<title>Water Drop — Water Quest</title>
-	<link rel="stylesheet" href="styles.css" />
+	<!-- Fonts: Montserrat primary, plus Poppins, Open Sans, Mulish, Lato fallbacks -->
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+	<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;700;900&family=Poppins:wght@300;400;600;700&family=Open+Sans:wght@300;400;600;700&family=Mulish:wght@300;400;600;700&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
+ 	<link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-	<!-- new top banner (uses img/banner.png). If it fails to load the inline onerror adds .banner-broken) -->
-	<div class="banner-wrapper">
-		<!-- inline SVG banner fallback to avoid 404 when img/banner.png is missing -->
-		<img id="topBanner" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='1200' height='280' viewBox='0 0 1200 280'><rect width='1200' height='280' rx='12' fill='%23FFC907'/><text x='50%' y='55%' dominant-baseline='middle' text-anchor='middle' font-family='Arial,Helvetica,sans-serif' font-size='56' fill='%2307243a' font-weight='700'>Water Quest</text></svg>" alt="charity: water banner" class="top-banner" />
+	<!-- container: centers page content and provides card visual -->
+	<div class="container">
 
-		<!-- Hero fallback: original header placed inside the hero, plus icon/title/play -->
-		<div class="banner-fallback"><!-- removed aria-hidden="true" to avoid focus/aria-hidden conflict -->
-			<div class="banner-hero">
-				<header class="site-header">
-					<!-- inline SVG logo fallback to avoid 404 when img/logo.png is missing -->
-					<img id="logoImg" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><circle cx='32' cy='32' r='30' fill='%23ffffff' opacity='0.02'/><path d='M32 10c6 8 12 14 12 22 0 6.6-5.4 12-12 12s-12-5.4-12-12c0-8 6-14 12-22z' fill='%232E9DF7'/></svg>" alt="charity: water logo" class="logo" />
-					<div class="title-block">
-						<h1>Water Drop</h1>
-						<p class="tagline">Tap clean drops, avoid dirty ones — save as many as you can!</p>
-					</div>
-				</header>
+	<!-- Brand strip: moved to the top so branding stands out immediately -->
+	<div class="brand-strip" aria-hidden="false">
+		<img class="brand-square"
+		     role="img"
+		     tabindex="0"
+		     alt="charity: water mark"
+		     aria-label="charity: water mark"
+		     src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='60' height='60' viewBox='0 0 60 60'><rect width='60' height='60' rx='6' fill='%23FFC907'/></svg>" />
 
-				<div class="hero-icon" aria-hidden="true"></div>
-				<h2 class="hero-title">WATER<br/>QUEST</h2>
-				<button id="bannerPlay" class="banner-play">PLAY</button>
-			</div>
-		</div>
+		<img class="brand-horizontal"
+		     role="img"
+		     tabindex="0"
+		     alt="Clarity Water wordmark"
+		     aria-label="Clarity Water wordmark"
+		     src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='360' height='60' viewBox='0 0 360 60'><rect x='6' y='6' width='48' height='48' rx='6' fill='%23FFC907'/><text x='68' y='38' font-family='Montserrat, Arial, sans-serif' font-size='22' fill='%2307243a' font-weight='700'>Clarity Water</text></svg>" />
 	</div>
+
+ 	<!-- new top banner (uses img/banner.png). If it fails to load the inline onerror adds .banner-broken) -->
+ 	<div class="banner-wrapper">
+ 		<!-- inline SVG banner fallback to avoid 404 when img/banner.png is missing -->
+ 		<img id="topBanner"
+ 		     src="img/banner.png"
+ 		     alt="Water Quest banner"
+ 		     class="top-banner"
+ 		     loading="lazy"
+ 		     onerror="this.onerror=null; this.src='data:image/svg+xml;utf8,<svg xmlns=&quot;http://www.w3.org/2000/svg&quot; width=&quot;1200&quot; height=&quot;280&quot; viewBox=&quot;0 0 1200 280&quot;><rect width=&quot;1200&quot; height=&quot;280&quot; rx=&quot;12&quot; fill=%27%23FFC907%27/><text x=&quot;50%25&quot; y=&quot;55%25&quot; dominant-baseline=&quot;middle&quot; text-anchor=&quot;middle&quot; font-family=&quot;Arial,Helvetica,sans-serif&quot; font-size=&quot;56&quot; fill=%27%2307243a%27 font-weight=&quot;700&quot;>Water Quest</text></svg>'; document.documentElement.classList.add('banner-broken');" />
+
+ 		<!-- Hero fallback: original header placed inside the hero, plus icon/title/play -->
+ 		<div class="banner-fallback"><!-- removed aria-hidden="true" to avoid focus/aria-hidden conflict -->
+ 			<div class="banner-hero">
+ 				<header class="site-header">
+ 					<!-- inline SVG logo fallback to avoid 404 when img/logo.png is missing -->
+ 					<img id="logoImg"
+ 					     src="img/logo.png"
+ 					     alt="charity: water logo"
+ 					     class="logo"
+ 					     loading="lazy"
+ 					     onerror="this.onerror=null; this.src='data:image/svg+xml;utf8,<svg xmlns=&quot;http://www.w3.org/2000/svg&quot; viewBox=&quot;0 0 64 64&quot;><circle cx=&quot;32&quot; cy=&quot;32&quot; r=&quot;30&quot; fill=%27%23ffffff%27 opacity=&quot;0.02&quot;/><path d=&quot;M32 10c6 8 12 14 12 22 0 6.6-5.4 12-12 12s-12-5.4-12-12c0-8 6-14 12-22z&quot; fill=%27%232E9DF7%27/></svg>'; document.documentElement.classList.add('logo-broken');" />
+ 					<div class="title-block">
+ 						<h1>Water Drop</h1>
+ 						<p class="tagline">Tap clean drops, avoid dirty ones — save as many as you can!</p>
+ 					</div>
+ 				</header>
+
+ 				<div class="hero-icon" aria-hidden="true"></div>
+ 				<h2 class="hero-title">WATER<br/>QUEST</h2>
+ 				<button id="bannerPlay" class="banner-play">PLAY</button>
+ 			</div>
+ 		</div>
+ 	</div>
 
 	<main class="game-wrap">
 		<section class="hud">
@@ -84,6 +118,7 @@
 			<button id="replayBtn" class="start-btn">Play again</button>
 		</div>
 	</div>
+	<!-- /container -->
 
 	<script src="script.js"></script>
 </body>

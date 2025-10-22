@@ -5,7 +5,6 @@
 const replayBtn = document.getElementById('replayBtn');
 const scoreEl = document.getElementById('score');
 const timeEl = document.getElementById('time');
-// cache the grid element once (assume static 3x3 markup in index.html)
 let gridEl = document.getElementById('gameGrid');
 const achievementEl = document.getElementById('achievement');
 const progressFill = document.getElementById('progress-fill');
@@ -13,25 +12,21 @@ const overlay = document.getElementById('overlay');
 const finalScore = document.getElementById('finalScore');
 const resultTitle = document.getElementById('resultTitle');
 const resultMessage = document.getElementById('resultMessage');
-// cache banner elements used by UI wiring
 const bannerWrapEl = document.querySelector('.banner-wrapper');
 const bannerPlayEl = document.getElementById('bannerPlay');
 const topBannerEl = document.getElementById('topBanner');
 
 const GAME_TIME = 30;
-
-// Replace fixed constants with variables driven by difficulty config
 const WIN_THRESHOLD = 10;
-const BAD_PENALTY = 2; // points deducted for clicking a dirty jerry can
+const BAD_PENALTY = 2;
 
-// difficulty configurations: spawn speed, visible duration, bad can chance
+// difficulty configurations
 const DIFFICULTY_CONFIGS = {
   easy:   { popMin: 900, popMax: 1400, visible: 1200, badChance: 0.12 },
   normal: { popMin: 600, popMax: 1000, visible: 900,  badChance: 0.18 },
-  master: { popMin: 350, popMax: 700,  visible: 700,  badChance: 0.28 } // "MasterQuest"
+  master: { popMin: 350, popMax: 700,  visible: 700,  badChance: 0.28 }
 };
 
-// current runtime values (will be set via setDifficulty)
 let popIntervalMin = DIFFICULTY_CONFIGS.normal.popMin;
 let popIntervalMax = DIFFICULTY_CONFIGS.normal.popMax;
 let popVisibleMs = DIFFICULTY_CONFIGS.normal.visible;
@@ -62,45 +57,36 @@ let running = false;
 let popTimer = null;
 let countdownTimer = null;
 let lastIndex = -1;
-let scorePulseTimer = null; // <-- added: timer for score pulse
-let peakScore = 0; // <-- added: track highest score achieved during a run
+let scorePulseTimer = null;
+let peakScore = 0;
 
 // helpers
 function randInt(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
 function rand(min, max) { return Math.random() * (max - min) + min; }
 
-// ensure grid reference (one-time fallback)
+// ensure grid reference
 if (!gridEl) {
   const fallback = document.querySelector('.game-grid');
   if (fallback) gridEl = fallback;
 }
 
 function updateHUD() {
-	scoreEl.textContent = score;
-	timeEl.textContent = Math.max(0, Math.floor(timeLeft));
-	// progress toward WIN_THRESHOLD
+	if (scoreEl) scoreEl.textContent = score;
+	if (timeEl) timeEl.textContent = Math.max(0, Math.floor(timeLeft));
 	const pct = Math.min(100, Math.round((score / WIN_THRESHOLD) * 100));
 	if (progressFill) progressFill.style.width = pct + '%';
-
-	// update accessible progress attributes and visible percent
 	const progressRoot = document.getElementById('goalProgress');
 	const percentEl = document.getElementById('progressPercent');
 	if (progressRoot) progressRoot.setAttribute('aria-valuenow', String(pct));
 	if (percentEl) percentEl.textContent = `${pct}%`;
-
-	// toggle complete styling when goal reached
 	if (progressRoot) {
 		if (pct >= 100) progressRoot.classList.add('complete');
 		else progressRoot.classList.remove('complete');
 	}
-
-	// pulse the score when it changes
 	if (scoreEl) {
 		scoreEl.classList.add('updated');
 		clearTimeout(scorePulseTimer);
-		scorePulseTimer = setTimeout(() => {
-			scoreEl.classList.remove('updated');
-		}, 360);
+		scorePulseTimer = setTimeout(() => scoreEl.classList.remove('updated'), 360);
 	}
 }
 
@@ -113,38 +99,31 @@ function clearAllPops() {
 	});
 }
 
-// create a can element (wrapped)
 function createCan(isBad) {
 	const wrapper = document.createElement('div');
 	wrapper.className = 'water-can-wrapper';
-	// removed development-only inline positioning / sizing here; CSS handles layout
 
 	const can = document.createElement('div');
 	can.className = 'water-can';
-	// removed development-only inline sizing/visual styles here; CSS handles sizing
-
-	// mark whether this can is "bad" using a data attribute (used by delegated handler)
 	can.dataset.bad = isBad ? '1' : '0';
 
-	// prefer external branded assets if present; fall back to inline SVG
+	// accessibility + focusability
+	can.setAttribute('role', 'button');
+	can.setAttribute('aria-pressed', 'false');
+	can.setAttribute('aria-label', isBad ? 'Dirty jerry can — avoid' : 'Clean jerry can');
+	can.tabIndex = 0;
+
+	// existing asset fallback logic
 	const html = document.documentElement;
 	const hasWaterImg = !html.classList.contains('no-water-can');
 	const hasDirtyImg = !html.classList.contains('no-dirty-can');
 
 	if (isBad) {
 		if (hasDirtyImg) {
-			// assign only the background image; sizing/position handled by CSS
 			can.style.backgroundImage = 'url("img/dirty-can.png")';
 			can.innerHTML = '';
 		} else {
-			// inline dirty fallback
-			can.innerHTML = `
-				<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
-					<rect x="8" y="16" width="40" height="32" rx="6" fill="#2b2b2b"></rect>
-					<rect x="10" y="8" width="8" height="10" rx="2" fill="#111"></rect>
-					<circle cx="46" cy="14" r="5" fill="#111"></circle>
-				</svg>
-			`;
+			can.innerHTML = `<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false"><rect x="8" y="16" width="40" height="32" rx="6" fill="#2b2b2b"></rect><rect x="10" y="8" width="8" height="10" rx="2" fill="#111"></rect><circle cx="46" cy="14" r="5" fill="#111"></circle></svg>`;
 			can.style.backgroundImage = '';
 		}
 	} else {
@@ -152,14 +131,7 @@ function createCan(isBad) {
 			can.style.backgroundImage = 'url("img/water-can.png")';
 			can.innerHTML = '';
 		} else {
-			// inline clean fallback
-			can.innerHTML = `
-				<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
-					<rect x="8" y="16" width="40" height="32" rx="6" fill="#FFC907"></rect>
-					<rect x="10" y="8" width="8" height="10" rx="2" fill="#072b3a"></rect>
-					<circle cx="46" cy="14" r="5" fill="#072b3a"></circle>
-				</svg>
-			`;
+			can.innerHTML = `<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false"><rect x="8" y="16" width="40" height="32" rx="6" fill="#FFC907"></rect><rect x="10" y="8" width="8" height="10" rx="2" fill="#072b3a"></rect><circle cx="46" cy="14" r="5" fill="#072b3a"></circle></svg>`;
 			can.style.backgroundImage = '';
 		}
 	}
@@ -169,14 +141,10 @@ function createCan(isBad) {
 	return { wrapper, can };
 }
 
-// pop a random cell
 function popRandom() {
-	if (!running) return;
-	if (!gridEl) return;
+	if (!running || !gridEl) return;
 	const cells = Array.from(gridEl.querySelectorAll('.grid-cell'));
 	if (!cells.length) return;
-
-	// pick an index different from lastIndex to avoid same cell twice
 	let idx = randInt(0, cells.length - 1);
 	if (cells.length > 1 && idx === lastIndex) idx = (idx + 1) % cells.length;
 	lastIndex = idx;
@@ -188,7 +156,9 @@ function popRandom() {
 	const { wrapper, can } = createCan(isBad);
 	cell.appendChild(wrapper);
 
-	// force visible state quickly (guard against missing CSS)
+	// mark cell when obstacle present so CSS can style whole cell
+	if (isBad) cell.classList.add('obstacle-present');
+
 	requestAnimationFrame(() => {
 		wrapper.style.opacity = '1';
 		wrapper.style.transform = 'translate(-50%, -50%) scale(1)';
@@ -201,11 +171,12 @@ function popRandom() {
 	setTimeout(() => {
 		if (!cell) return;
 		cell.classList.remove('pop');
+		// remove marker when can is removed
+		if (cell.classList.contains('obstacle-present')) cell.classList.remove('obstacle-present');
 		if (wrapper && wrapper.parentNode) wrapper.remove();
 	}, popVisibleMs);
 }
 
-// spawn loop that schedules next pop
 function scheduleNextPop() {
 	if (!running) return;
 	popRandom();
@@ -229,154 +200,98 @@ function startCountdown() {
 }
 
 function showAchievement(text, ms = 1200) {
+	if (!achievementEl) return;
 	achievementEl.textContent = text;
 	if (ms > 0) setTimeout(() => {
 		if (achievementEl.textContent === text) achievementEl.textContent = '';
 	}, ms);
 }
 
+// consolidated difficulty setter (declared before use)
+function setDifficulty(level) {
+  if (!DIFFICULTY_CONFIGS[level]) level = 'normal';
+  currentDifficulty = level;
+  const cfg = DIFFICULTY_CONFIGS[level];
+  popIntervalMin = cfg.popMin;
+  popIntervalMax = cfg.popMax;
+  popVisibleMs = cfg.visible;
+  badChance = cfg.badChance;
+  showAchievement(`Difficulty: ${level === 'master' ? 'MasterQuest' : level.charAt(0).toUpperCase() + level.slice(1)}`, 900);
+}
+
 function startGame() {
 	if (running) return;
 	try {
-		// stop visual effects
 		stopConfetti();
-
-		// clear any scheduled pops/countdowns
 		clearTimeout(popTimer); popTimer = null;
 		clearInterval(countdownTimer); countdownTimer = null;
 
-		// reset state
 		score = 0;
 		timeLeft = GAME_TIME;
 		running = true;
-
-		// reset peak score tracker
 		peakScore = 0;
 
-		// hide overlay/banner and reset UI
-		overlay.classList.add('hidden');
+		if (overlay) overlay.classList.add('hidden');
 		if (bannerWrapEl) bannerWrapEl.classList.add('hidden');
 
 		updateHUD();
 		clearAllPops();
 
-		// gridEl is expected to exist in the HTML (static 3x3). If it's missing, abort start.
 		if (!gridEl) { running = false; return; }
 
-		// start timers and first pop
 		startCountdown();
 		popRandom();
 		scheduleNextPop();
 		showAchievement('Game started — tap the yellow cans!', 1000);
 	} catch (err) {
-		// avoid logging to console in production; fail silently but reset running flag
 		running = false;
 	}
 }
 
-// --- Unified endGame (no leaderboard side-effects here) ---
 function endGame() {
-	// stop running state and timers
 	running = false;
 	clearTimeout(popTimer); popTimer = null;
 	clearInterval(countdownTimer); countdownTimer = null;
-
-	// clear visible pops
 	clearAllPops();
 
-	// show results
-	finalScore.textContent = score;
+	if (finalScore) finalScore.textContent = score;
 	const isWin = score >= WIN_THRESHOLD;
 	const pool = isWin ? winMessages : loseMessages;
 	const msg = pool[Math.floor(Math.random() * pool.length)];
-	resultTitle.textContent = isWin ? 'You win!' : 'Try again';
-	resultMessage.textContent = msg;
-	overlay.classList.remove('hidden');
+	if (resultTitle) resultTitle.textContent = isWin ? 'You win!' : 'Try again';
+	if (resultMessage) resultMessage.textContent = msg;
+	if (overlay) overlay.classList.remove('hidden');
 
-	// confetti for notable achievements:
-	// only launch if player reached at least 10 during play (peakScore) AND still has >=10 final points
 	if (peakScore >= 10 && score >= 10) {
 		setTimeout(() => launchConfettiBurst(140), 220);
 	}
 }
 
-// --- Added reset helper (was missing) ---
 function resetGame() {
-	// stop timers and scheduled pops
 	clearTimeout(popTimer); popTimer = null;
 	clearInterval(countdownTimer); countdownTimer = null;
-
-	// stop confetti
-	try { stopConfetti(); } catch (e) { /* ignore */ }
-
-	// mark not running
+	try { stopConfetti(); } catch (e) {}
 	running = false;
-
-	// clear visible cans and reset HUD
-	try { clearAllPops(); } catch (e) { /* ignore */ }
+	try { clearAllPops(); } catch (e) {}
 	score = 0;
 	timeLeft = GAME_TIME;
 	updateHUD();
-
-	// hide overlay if visible
 	if (overlay) overlay.classList.add('hidden');
-
-	// remove focus from any interactive banner/button so hiding won't trap focus
-	if (document.activeElement && document.activeElement instanceof HTMLElement) {
-		document.activeElement.blur();
-	}
+	if (document.activeElement && document.activeElement instanceof HTMLElement) document.activeElement.blur();
 }
 
-// --- Improved hideBanner: blur focused element inside banner before hiding (fixes aria-hidden+focus) ---
 function hideBanner() {
 	if (!bannerWrapEl) return;
-	// if focus is inside the banner, blur it first to avoid aria-hidden/focus conflicts
 	const active = document.activeElement;
-	if (active && bannerWrapEl.contains(active) && typeof active.blur === 'function') {
-		active.blur();
-	}
+	if (active && bannerWrapEl.contains(active) && typeof active.blur === 'function') active.blur();
 	bannerWrapEl.classList.add('hidden');
 }
 
-// --- Consolidated UI wiring (single listeners, no duplicates) ---
-// replay: hide overlay and start
-replayBtn?.addEventListener('click', () => {
-	overlay.classList.add('hidden');
-	hideBanner();
-	setTimeout(startGame, 140);
-});
-
-// keyboard: Space to start when not running
-document.addEventListener('keydown', (e) => {
-	if (e.code === 'Space' && !running) {
-		e.preventDefault();
-		hideBanner();
-		startGame();
-	}
-});
-
-// banner fallback PLAY button and banner image both start the game (use cached refs)
-bannerPlayEl?.addEventListener('click', (e) => {
-	e?.preventDefault();
-	hideBanner();
-	startGame();
-});
-topBannerEl?.addEventListener('click', (e) => {
-	const el = e.currentTarget;
-	if (!el) return;
-	const style = window.getComputedStyle(el);
-	if (style && (style.display === 'none' || style.visibility === 'hidden' || el.hasAttribute('hidden'))) return;
-	e.preventDefault();
-	hideBanner();
-	startGame();
-});
-
-// --- Full confetti implementation (replaces stubs) ---
+// --- Confetti (single consolidated implementation) ---
 let _confettiCanvas = null;
 let _confettiCtx = null;
 let _confettiParticles = [];
 let _confettiAnim = null;
-
 function _createConfettiCanvas() {
 	if (_confettiCanvas) return;
 	_confettiCanvas = document.createElement('canvas');
@@ -394,7 +309,6 @@ function _createConfettiCanvas() {
 	resize();
 	window.addEventListener('resize', resize);
 }
-
 function _spawnConfetti(count = 80) {
 	if (!_confettiCtx) _createConfettiCanvas();
 	const colors = ['#FFC907','#2E9DF7','#8BD1CB','#4FCB53','#072b3a'];
@@ -414,7 +328,6 @@ function _spawnConfetti(count = 80) {
 	}
 	if (!_confettiAnim) _confettiLoop();
 }
-
 function _confettiLoop() {
 	if (!_confettiCtx) return;
 	const ctx = _confettiCtx;
@@ -424,7 +337,7 @@ function _confettiLoop() {
 		const p = _confettiParticles[i];
 		p.x += p.vx;
 		p.y += p.vy;
-		p.vy += 0.09; // gravity
+		p.vy += 0.09;
 		p.rot += p.vrot;
 		p.ttl--;
 		ctx.save();
@@ -433,12 +346,9 @@ function _confettiLoop() {
 		ctx.fillStyle = p.color;
 		ctx.fillRect(-p.w/2, -p.h/2, p.w, p.h);
 		ctx.restore();
-		if (p.y > canvas.height + 60 || p.ttl <= 0) {
-			_confettiParticles.splice(i, 1);
-		}
+		if (p.y > canvas.height + 60 || p.ttl <= 0) _confettiParticles.splice(i, 1);
 	}
 	if (_confettiParticles.length === 0) {
-		// stop animation and remove canvas shortly
 		cancelAnimationFrame(_confettiAnim);
 		_confettiAnim = null;
 		setTimeout(() => {
@@ -452,28 +362,10 @@ function _confettiLoop() {
 	}
 	_confettiAnim = requestAnimationFrame(_confettiLoop);
 }
+function launchConfettiBurst(count = 100) { _spawnConfetti(count); }
+function stopConfetti() { if (_confettiAnim) cancelAnimationFrame(_confettiAnim); _confettiAnim = null; _confettiParticles.length = 0; if (_confettiCanvas) { _confettiCanvas.remove(); _confettiCanvas = null; _confettiCtx = null; } }
 
-function launchConfettiBurst(count = 100) {
-	_spawnConfetti(count);
-}
-
-// stop and clear any running confetti immediately
-function stopConfetti() {
-	if (_confettiAnim) cancelAnimationFrame(_confettiAnim);
-	_confettiAnim = null;
-	_confettiParticles.length = 0;
-	if (_confettiCanvas) {
-		_confettiCanvas.remove();
-		_confettiCanvas = null;
-		_confettiCtx = null;
-	}
-}
-
-// initial UI
-updateHUD();
-clearAllPops();
-
-// --- Extracted tap handling so keyboard and pointer share logic ---
+// --- Input handling and shared tap logic ---
 function handleCanTap(can) {
 	if (!can) return;
 	// prevent double-tap
@@ -490,10 +382,17 @@ function handleCanTap(can) {
 	const isBad = can.dataset.bad === '1' || can.classList.contains('obstacle');
 
 	if (isBad) {
-		// show silhouette then remove
+		// strong negative feedback: shake and silhouette, then remove
 		can.classList.add('silhouette');
+		can.classList.add('shake');
+		setTimeout(() => {
+			can.classList.remove('shake');
+		}, 420);
+
 		setTimeout(() => {
 			if (cell) cell.classList.remove('pop');
+			// ensure cell obstacle marker removed
+			if (cell && cell.classList.contains('obstacle-present')) cell.classList.remove('obstacle-present');
 			if (wrapper) wrapper.remove();
 		}, 220);
 
@@ -521,18 +420,50 @@ if (gridEl) {
 		if (!can || !gridEl.contains(can)) return;
 		handleCanTap(can);
 	});
+
 	// keyboard support: Enter/Space on a focused grid-cell will attempt to tap the can inside it
 	gridEl.addEventListener('keydown', (e) => {
 		if (e.code !== 'Enter' && e.code !== 'Space') return;
 		const focused = document.activeElement;
 		if (!focused || !focused.classList || !focused.classList.contains('grid-cell')) return;
-		// if a can exists in the cell, trigger the same logic
 		const can = focused.querySelector('.water-can');
 		if (!can) return;
 		e.preventDefault();
 		handleCanTap(can);
 	});
 }
+
+// --- UI wiring (replay, reset, difficulty) ---
+replayBtn?.addEventListener('click', () => {
+	if (overlay) overlay.classList.add('hidden');
+	hideBanner();
+	setTimeout(startGame, 140);
+});
+
+// keyboard: Space to start when not running
+document.addEventListener('keydown', (e) => {
+	if (e.code === 'Space' && !running) {
+		e.preventDefault();
+		hideBanner();
+		startGame();
+	}
+});
+
+// banner PLAY handlers
+bannerPlayEl?.addEventListener('click', (e) => {
+	e?.preventDefault();
+	hideBanner();
+	startGame();
+});
+topBannerEl?.addEventListener('click', (e) => {
+	const el = e.currentTarget;
+	if (!el) return;
+	const style = window.getComputedStyle(el);
+	if (style && (style.display === 'none' || style.visibility === 'hidden' || el.hasAttribute('hidden'))) return;
+	e.preventDefault();
+	hideBanner();
+	startGame();
+});
 
 // wire reset button and difficulty selector (listeners added once)
 const resetBtn = document.getElementById('resetBtn');
@@ -542,13 +473,11 @@ resetBtn?.addEventListener('click', () => {
 	// reset state and immediately restart the game with current difficulty
 	resetGame();
 	setTimeout(() => {
-		// ensure difficulty is applied and then start
 		setDifficulty(currentDifficulty);
 		startGame();
 	}, 120);
 });
 
-// change difficulty while idle or running; applies immediately
 difficultySelect?.addEventListener('change', (e) => {
 	const val = (e.target && e.target.value) || 'normal';
 	setDifficulty(val);
@@ -556,7 +485,6 @@ difficultySelect?.addEventListener('change', (e) => {
 	if (running) {
 		clearTimeout(popTimer);
 		popTimer = null;
-		// schedule a fresh pop using new interval values
 		scheduleNextPop();
 	}
 });
@@ -564,123 +492,35 @@ difficultySelect?.addEventListener('change', (e) => {
 // ensure initial difficulty is applied on load
 setDifficulty(currentDifficulty);
 
-// --- Unified setDifficulty function (used by UI and internal logic) ---
-function setDifficulty(level) {
-  if (!DIFFICULTY_CONFIGS[level]) level = 'normal';
-  currentDifficulty = level;
-  const cfg = DIFFICULTY_CONFIGS[level];
-  popIntervalMin = cfg.popMin;
-  popIntervalMax = cfg.popMax;
-  popVisibleMs = cfg.visible;
-  badChance = cfg.badChance;
-  // update UI hint
-  showAchievement(`Difficulty: ${level === 'master' ? 'MasterQuest' : level.charAt(0).toUpperCase() + level.slice(1)}`, 900);
-}
-
-// --- Full confetti implementation (replaces stubs) ---
-let _confettiCanvas = null;
-let _confettiCtx = null;
-let _confettiParticles = [];
-let _confettiAnim = null;
-
-function _createConfettiCanvas() {
-	if (_confettiCanvas) return;
-	_confettiCanvas = document.createElement('canvas');
-	_confettiCanvas.className = 'confetti-canvas';
-	_confettiCanvas.style.position = 'fixed';
-	_confettiCanvas.style.inset = '0';
-	_confettiCanvas.style.pointerEvents = 'none';
-	_confettiCanvas.style.zIndex = '60';
-	document.body.appendChild(_confettiCanvas);
-	_confettiCtx = _confettiCanvas.getContext('2d');
-	function resize() {
-		_confettiCanvas.width = window.innerWidth;
-		_confettiCanvas.height = window.innerHeight;
-	}
-	resize();
-	window.addEventListener('resize', resize);
-}
-
-function _spawnConfetti(count = 80) {
-	if (!_confettiCtx) _createConfettiCanvas();
-	const colors = ['#FFC907','#2E9DF7','#8BD1CB','#4FCB53','#072b3a'];
-	for (let i = 0; i < count; i++) {
-		_confettiParticles.push({
-			x: Math.random() * _confettiCanvas.width,
-			y: -10 - Math.random() * 300,
-			vx: (Math.random() - 0.5) * 8,
-			vy: 2 + Math.random() * 6,
-			rot: Math.random() * Math.PI * 2,
-			vrot: (Math.random() - 0.5) * 0.3,
-			w: 6 + Math.random() * 12,
-			h: 8 + Math.random() * 8,
-			color: colors[Math.floor(Math.random() * colors.length)],
-			ttl: 80 + Math.floor(Math.random() * 120)
-		});
-	}
-	if (!_confettiAnim) _confettiLoop();
-}
-
-function _confettiLoop() {
-	if (!_confettiCtx) return;
-	const ctx = _confettiCtx;
-	const canvas = _confettiCanvas;
-	ctx.clearRect(0,0,canvas.width,canvas.height);
-	for (let i = _confettiParticles.length - 1; i >= 0; i--) {
-		const p = _confettiParticles[i];
-		p.x += p.vx;
-		p.y += p.vy;
-		p.vy += 0.09; // gravity
-		p.rot += p.vrot;
-		p.ttl--;
-		ctx.save();
-		ctx.translate(p.x, p.y);
-		ctx.rotate(p.rot);
-		ctx.fillStyle = p.color;
-		ctx.fillRect(-p.w/2, -p.h/2, p.w, p.h);
-		ctx.restore();
-		if (p.y > canvas.height + 60 || p.ttl <= 0) {
-			_confettiParticles.splice(i, 1);
-		}
-	}
-	if (_confettiParticles.length === 0) {
-		// stop animation and remove canvas shortly
-		cancelAnimationFrame(_confettiAnim);
-		_confettiAnim = null;
-		setTimeout(() => {
-			if (_confettiCanvas && _confettiParticles.length === 0) {
-				_confettiCanvas.remove();
-				_confettiCanvas = null;
-				_confettiCtx = null;
-			}
-		}, 400);
-		return;
-	}
-	_confettiAnim = requestAnimationFrame(_confettiLoop);
-}
-
-function launchConfettiBurst(count = 100) {
-	_spawnConfetti(count);
-}
-
-// stop and clear any running confetti immediately
-function stopConfetti() {
-	if (_confettiAnim) cancelAnimationFrame(_confettiAnim);
-	_confettiAnim = null;
-	_confettiParticles.length = 0;
-	if (_confettiCanvas) {
-		_confettiCanvas.remove();
-		_confettiCanvas = null;
-		_confettiCtx = null;
-	}
-}
-
-// initial UI
+// keep initial UI state
 updateHUD();
 clearAllPops();
 
-// --- Extracted tap handling so keyboard and pointer share logic ---
-function handleCanTap(can) {
-	if (!can) return;
-	// prevent double-tap
-	if
+// preload brand assets and mark documentElement when images are missing.
+// This lets createCan prefer external images when available and fall back to inline SVG otherwise.
+function preloadBrandAssets() {
+  const html = document.documentElement;
+  const assets = [
+    { src: 'img/water-can.png', missingClass: 'no-water-can' },
+    { src: 'img/dirty-can.png', missingClass: 'no-dirty-can' }
+  ];
+
+  assets.forEach(({ src, missingClass }) => {
+    // remove any stale class first
+    html.classList.remove(missingClass);
+    const img = new Image();
+    img.onload = () => {
+      // asset available — ensure missing marker is not present
+      html.classList.remove(missingClass);
+    };
+    img.onerror = () => {
+      // asset missing — add marker so JS/CSS use fallbacks
+      html.classList.add(missingClass);
+    };
+    // start load
+    img.src = src;
+  });
+}
+
+// call preloader early so UI logic knows which assets exist
+preloadBrandAssets();
