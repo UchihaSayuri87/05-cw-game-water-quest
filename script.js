@@ -466,24 +466,6 @@ function preloadSounds() {
   });
 }
 
-// ensure sounds begin loading immediately (defensive; missing files won't throw)
-preloadSounds();
-
-// wire the HUD sound toggle button (re-add wiring so mute/unmute works)
-const soundToggle = document.getElementById('soundToggle');
-if (soundToggle) {
-  // initialize aria state & icon
-  soundToggle.setAttribute('aria-pressed', String(!soundEnabled));
-  soundToggle.textContent = soundEnabled ? '🔊' : '🔈';
-
-  soundToggle.addEventListener('click', (e) => {
-    e?.preventDefault();
-    soundEnabled = !soundEnabled;
-    soundToggle.setAttribute('aria-pressed', String(!soundEnabled));
-    soundToggle.textContent = soundEnabled ? '🔊' : '🔈';
-  });
-}
-
 // Add missing brand asset preloader (defensive, no-op in DEV_MODE)
 function preloadBrandAssets() {
   try {
