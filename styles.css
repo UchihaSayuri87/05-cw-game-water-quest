@@ -2,20 +2,14 @@
 
 /* Brand colors and variables */
 :root{
-  --cw-yellow: #FFC907;
-  --cw-blue: #2E9DF7;
-  --cw-light-blue: #8BD1CB;
-  --cw-green: #4FCB53;
-  --cw-orange: #FF902A;
-  --cw-red: #F5402C;
-  --cw-dark-green: #159A48;
-  --cw-dark: #073b4c;
-  --bg: #f7fbfd;
-  --bad: #6b4f3f; /* dirty water */
-
-  /* Accessible design tokens (keeps charity: water palette) */
-  --focus-ring: rgba(255,201,7,0.24);   /* yellow focus ring */
-  --elevation-1: 0 6px 18px rgba(2,6,23,0.08);
+  /* tuned to a charity: water inspired palette */
+  --cw-yellow: #FFCA3A;        /* softer warm yellow */
+  --cw-blue:   #00AEEF;        /* bright charity-like blue */
+  --cw-dark:   #073b4c;        /* deep navy for type */
+  --muted:     #f6fbff;        /* soft page tint */
+  --card-bg:   #ffffff;
+  --focus-ring: rgba(0,174,239,0.18);
+  --elevation-1: 0 10px 30px rgba(2,6,23,0.06);
   --radius-lg: 12px;
 
   /* add a couple of responsive token fallbacks */
@@ -30,7 +24,8 @@ body{
   font-family: "Montserrat", "Poppins", "Open Sans", "Mulish", "Lato", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   margin:0;
   padding:18px;
-  background: linear-gradient(180deg, var(--bg) 0%, #eaf6ff 100%);
+  /* lighter backdrop, more like charity: water landing */
+  background: linear-gradient(180deg, var(--muted) 0%, #ffffff 100%);
   color:var(--cw-dark);
   min-height:100vh;
   display:flex;
@@ -57,7 +52,8 @@ body, p, .tagline, .score, .timer, .achievement {
   background-color: #fff;
   padding: 14px;
   border-radius: 12px;
-  box-shadow: 0 18px 46px rgba(2,6,23,0.06);
+  /* reduce heavy shadows across UI for cleaner look */
+  box-shadow: 0 8px 28px rgba(2,6,23,0.04);
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -67,13 +63,15 @@ body, p, .tagline, .score, .timer, .achievement {
 .banner-wrapper {
   /* make the banner feel like a large hero while keeping it inside the card */
   padding: clamp(18px, 6vw, 48px);
-  border-radius: 12px;
-  box-shadow: 0 18px 46px rgba(2,6,23,0.06);
-  background: linear-gradient(180deg, var(--cw-yellow) 0%, color-mix(in srgb, var(--cw-yellow) 85%, #fff 15%) 100%);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-direction: column;
+  border-radius: var(--radius-lg);
+  /* Hero / banner: white card look, left-aligned feel with accent */
+  background: linear-gradient(180deg, var(--card-bg) 0%, #fbfdff 100%);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  flex-direction:column;
+  /* elevation for the banner */
+  box-shadow: var(--elevation-1);
 }
 
 /* ensure banner wrapper can contain an absolutely-positioned close button */
@@ -489,20 +487,20 @@ h1 { text-align:center; font-size:30px; font-weight:bold; color:var(--cw-blue); 
 .banner-wrapper {
   /* make the banner feel like a large hero while keeping it inside the card */
   padding: clamp(18px, 6vw, 48px);
-  border-radius: 12px;
-  box-shadow: 0 18px 46px rgba(2,6,23,0.06);
-  background: linear-gradient(180deg, var(--cw-yellow) 0%, color-mix(in srgb, var(--cw-yellow) 85%, #fff 15%) 100%);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-direction: column;
+  border-radius: var(--radius-lg);
+  /* Hero / banner: white card look, left-aligned feel with accent */
+  background: linear-gradient(180deg, var(--card-bg) 0%, #fbfdff 100%);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  flex-direction:column;
 }
 
 /* make the fallback hero layout more visually dominant */
 .banner-hero {
   width: 100%;
-  max-width: 720px;
-  padding: 28px;
+  max-width: 520px;
+  padding: 18px 12px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -511,306 +509,123 @@ h1 { text-align:center; font-size:30px; font-weight:bold; color:var(--cw-blue); 
   background: transparent;
 }
 
-/* big stacked white title like reference */
-.hero-title{
-  margin:0;
-  font-weight:900;
-  color: #fff;
-  font-size: clamp(28px, 9vw, 84px);
-  line-height: 0.92;
+/* large stacked white title */
+.hero-title {
+  margin: 0;
+  color: var(--cw-blue);
+  text-shadow: none;
+  font-size: clamp(28px, 6vw, 56px);
+  line-height: 1;
   letter-spacing: -0.02em;
   text-transform: uppercase;
-  text-shadow: 0 18px 30px rgba(2,6,23,0.12);
 }
 
-/* blue pill play button — larger, punchier to match hero */
-.banner-play{
-  appearance: none;
-  -webkit-appearance: none;
-  background: linear-gradient(180deg, var(--cw-blue) 0%, #0f86e3 100%);
-  color: #fff;
-  border: none;
-  padding: 18px 56px;
-  border-radius: 999px;
-  font-weight: 900;
-  font-size: clamp(16px, 2.8vw, 26px);
-  cursor: pointer;
-  box-shadow: 0 20px 56px rgba(46,157,247,0.22);
-  transform: translateZ(0);
-}
-
-/* ensure banner-close sits above the hero and remains visible on the new hero */
-.banner-close {
-  position: absolute;
-  right: 12px;
-  top: 12px;
-  z-index: 120;
-  width: 44px;
-  height: 44px;
-  border-radius: 10px;
-  border: none;
-  background: rgba(255,255,255,0.95);
-  box-shadow: 0 10px 26px rgba(2,6,23,0.08);
-  font-size: 18px;
-  line-height: 1;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-}
-
-/* keep earlier .site-header spacing so hero and header don't collide */
-.site-header { margin-top: 12px; }
-
-/* jerry brand next to logo: styled to match the in-game clean can visuals */
-.jerry-brand {
-  width: 56px;
-  height: 56px;
-  display: inline-block;
-  flex: 0 0 auto;
-  border-radius: 8px;
-  box-shadow: 0 10px 30px rgba(2,6,23,0.12);
-  background: transparent;
-  border: 2px solid rgba(0,0,0,0.06); /* match .water-can border */
-  padding: 6px; /* give the SVG some breathing room inside the pill */
-  background-repeat: no-repeat;
-  background-size: contain;
-  background-position: center;
-  vertical-align: middle;
-}
-
-/* visible focus for accessibility (consistent with other focus styles) */
-.jerry-brand:focus-visible {
-  outline: 3px solid rgba(255,201,7,0.24);
-  outline-offset: 4px;
-  border-radius: 8px;
-}
-
-/* Tutorial details styling */
-.tutorial {
-  max-width: 820px;
-  margin: 8px auto 0;
-  padding: 10px 14px;
-  border-radius: 10px;
-  background: linear-gradient(180deg, rgba(46,157,247,0.03), rgba(46,157,247,0.01));
-  border: 1px solid rgba(46,157,247,0.06);
-  box-shadow: 0 6px 18px rgba(2,6,23,0.04);
-  font-size: 15px;
-}
-.tutorial summary {
-  font-weight: 700;
-  cursor: pointer;
-  list-style: none;
-  outline: none;
-}
-.tutorial .tutorial-body { margin-top: 10px; }
-.tutorial ul { margin: 6px 0 10px 18px; }
-.tutorial .tutorial-note { font-size: 13px; color: #055b7a; font-weight:600; }
-
-/* small screens: keep tutorial compact */
-@media (max-width:520px) {
-  .jerry-brand { width:44px; height:44px; margin-right:8px; }
-  .tutorial { padding: 8px 10px; font-size:14px; }
-}
-
-/* smaller screens: scale down hero */
-@media (max-width:640px){
-  .hero-title { font-size: 28px; }
-  /* scale the hero icon down on narrow viewports while keeping improved contrast */
-  .hero-icon { width:84px; height:84px; border-radius:12px; }
-  .banner-play { padding:12px 28px; font-size:16px; }
-}
-
-/* make the banner-play and logo slightly smaller on very narrow screens so layout doesn't break */
-@media (max-width:520px){
-  .banner-play { padding:10px 20px; }
-  .logo { height:44px; }
-  .container { margin: 14px; padding: 12px; }
-  .game-field { padding: 12px; height: 48vh; min-height: 260px; }
-}
-
-/* logo SVG fallback rules: show inline SVG when the external image failed to load */
-.logo-svg { display: none; }
-.logo-broken .logo { display: none; }
-.logo-broken .logo-svg { display: block; height:56px; width:auto; }
-
-/* If JS detects missing water-can asset, it adds .use-inline-can to html/documentElement.
-   This rule provides an embedded SVG fallback for .water-can background. */
-.use-inline-can .water-can {
-  /* embedded simple can illustration (colors use brand blue/yellow) */
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect x='12' y='18' width='40' height='30' rx='6' fill='%232E9DF7'/><rect x='18' y='8' width='6' height='10' rx='2' fill='%23FFC907'/><circle cx='44' cy='12' r='6' fill='%23FFC907'/></svg>");
-  background-size: cover;
-  background-repeat: no-repeat;
-  background-position: center;
-}
-
-/* show a black silhouette of the jerry-can image when applied */
-.water-can.silhouette {
-  /* make the image render as a solid black silhouette while preserving transparency */
-  filter: brightness(0) saturate(100%) contrast(120%);
-  transition: filter 140ms ease, transform 120ms ease, opacity 120ms ease;
-}
-
-/* subtle outline so you can see grid cells during testing */
-.grid-cell { outline: none; }
-
-/* confetti canvas overlay */
-.confetti-canvas {
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: 60;
-}
-
-/* Respect user preference for reduced motion */
-@media (prefers-reduced-motion: reduce) {
-  .start-btn, .banner-play, button, .water-can, .grid-cell .water-can-wrapper,
-  .achievement { transition: none !important; animation: none !important; }
-  @keyframes score-bump { 0% { transform: none; } }
-}
-
-/* Responsive: ensure hero/play scales on small screens */
-@media (max-width: 420px) {
-  .banner-play { padding: 10px 22px; font-size: 15px; }
-  .hero-title { font-size: 22px; }
-  .grid-cell { min-height: 96px; }
-}
-
-/* score bump animation used by JS hook */
-@keyframes score-bump {
-  0% { transform: scale(1); }
-  50% { transform: scale(1.08); }
-  100% { transform: scale(1); }
-}
-.score.updated {
-  animation: score-bump 360ms ease;
-}
-
-/* Leaderboard / winner form */
-.leaderboard-form {
-  display:flex;
-  flex-direction:column;
-  gap:8px;
-  align-items:center;
-  margin:12px 0 8px;
-}
-.leaderboard-form label {
-  font-size:0.95rem;
-  color:var(--cw-dark);
-  font-weight:600;
-}
-.leaderboard-form input {
-  width:100%;
-  max-width:320px;
-  padding:10px 12px;
-  border-radius:8px;
-  border:1px solid rgba(7,43,58,0.08);
-  font-size:15px;
-  box-shadow: inset 0 1px 0 rgba(255,255,255,0.6);
-}
-.leaderboard-form .start-btn { padding:8px 18px; font-size:15px; }
-
-/* Leaderboard section */
-.leaderboard-section {
-  margin-top:12px;
-  text-align:left;
-  max-width:420px;
-}
-.leaderboard-section h3{
-  margin:0 0 8px; color:var(--cw-blue);
-}
-.leaderboard-list {
-  list-style: decimal;
-  margin:0;
-  padding-left:1.1em;
-  max-height:240px;
-  overflow:auto;
-}
-.leaderboard-list li {
-  padding:8px 6px;
-  border-bottom:1px solid rgba(2,6,23,0.04);
-  display:flex;
-  justify-content:space-between;
-  gap:12px;
-}
-.leaderboard-list li .name { font-weight:700; color:var(--cw-dark); }
-.leaderboard-list li .score { color:var(--cw-blue); font-weight:800; }
-
-/* Brand strip sits between the banner and the game; not part of the playable area. */
-.brand-strip{
+/* hero icon container */
+.hero-icon {
+  width: 140px;
+  height: 140px;
   display:flex;
   align-items:center;
   justify-content:center;
-  gap:14px;
-  padding: 10px 14px;
-  margin: 0; /* sits flush at the top of the card */
-  border-radius: 12px;
-  background: linear-gradient(180deg, #ffffff, rgba(250,250,250,0.98));
-  box-shadow: 0 10px 30px rgba(2,6,23,0.06);
-  z-index: 50;
-}
-
-/* square mark: larger, higher contrast */
-.brand-square {
-  width: 56px;
-  height: 56px;
-  display:block;
-  flex: 0 0 auto;
-  border-radius: 8px;
-  box-shadow: 0 8px 28px rgba(2,6,23,0.08);
-}
-
-/* horizontal wordmark: stronger, keeps proportion with square */
-.brand-horizontal {
-  width: min(380px, 56%);
-  height: auto;
-  display:block;
-  flex: 0 1 auto;
-  filter: none;
-}
-
-/* make sure brand strip doesn't overlap header content on small screens */
-@media (max-width:520px){
-  .brand-strip{ gap:10px; padding:8px; top:6px; }
-  .brand-square{ width:44px; height:44px; }
-  .brand-horizontal{ width: min(220px, 60%); }
-}
-
-/* larger, higher-contrast hero mark to match the attachment */
-.hero-icon{
-  width: 120px;
-  height: 120px;
   border-radius: 18px;
-  /* deep brand tone gradient for better contrast while keeping brand colors */
-  background: linear-gradient(180deg, #072b3a 0%, #03262b 100%);
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  box-shadow: 0 18px 40px rgba(2,6,23,0.18);
-  transform: translateZ(0);
-  border: 2px solid rgba(255,255,255,0.06);
+  background: transparent; /* drop-mark inside has its own styling */
+  box-shadow: none;
 }
 
-/* larger drop SVG inside the icon so it remains crisp at the new size */
-.hero-icon::after{
+/* drop-mark: simple, high-contrast droplet approximated with CSS (no large embedded image) */
+.drop-mark {
+  width: 84px;
+  height: 110px;
+  position: relative;
+  display: block;
+}
+/* droplet shape: use two overlapping elements to approximate a teardrop */
+.drop-mark::before {
   content: "";
-  width: 64px;
-  height: 80px;
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path fill='%23ffffff' d='M12 2s6 5.5 6 9a6 6 0 1 1-12 0c0-3.5 6-9 6-9z'/></svg>");
-  background-size: contain;
-  background-repeat: no-repeat;
-  display:block;
-  filter: drop-shadow(0 8px 18px rgba(2,6,23,0.16));
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  margin: 0 auto;
+  width: 84px;
+  height: 84px;
+  background: var(--cw-blue);
+  border-radius: 50%;
+}
+.drop-mark::after {
+  content: "";
+  position: absolute;
+  left: 20%;
+  right: 20%;
+  top: 42%;
+  margin: 0 auto;
+  width: 44px;
+  height: 62px;
+  background: var(--cw-blue);
+  border-radius: 50% 50% 40% 40%;
+  transform: rotate(45deg) translateY(-6%);
 }
 
-/* When a real banner image is available hide the fallback hero */
-.banner-wrapper.banner-with-image .banner-fallback { display: none !important; }
+/* Play button: prominent blue pill centered under the title */
+.banner-play {
+  background: var(--cw-blue);
+  color: #fff;
+  padding: 14px 48px;
+  border-radius: 999px;
+  font-weight: 800;
+  box-shadow: 0 10px 30px rgba(0,174,239,0.14);
+  cursor: pointer;
+  border: none;
+  font-size: clamp(18px, 3.5vw, 28px);
+}
 
-/* When the image failed (banner-broken) hide the top-banner image and show fallback */
-.banner-broken .top-banner { display: none !important; }
+/* Slight hover lift */
+.banner-play:hover { transform: translateY(-3px); box-shadow: 0 18px 40px rgba(0,174,239,0.16); }
 
-/* treat .hidden as a strong hide for JS-driven state */
-.banner-wrapper.hidden { display: none !important; }
+/* Logo/wordmark: keep it crisp and dark to read on white */
+.brand-horizontal { filter: none; }
 
-/* utility: strong hide used by JS for panels and banners */
-.hidden { display: none !important; visibility: hidden !important; }
+/* CTA (card-aligned) styled to match charity: water primary action */
+.splash-btn {
+  background: transparent;
+  color: var(--cw-blue);
+  border: 2px solid rgba(0,174,239,0.12);
+  padding: 10px 16px;
+  border-radius: 999px;
+  font-weight:700;
+  box-shadow: none;
+}
+.splash-btn:hover {
+  background: rgba(0,174,239,0.06);
+  transform: translateY(-2px);
+}
+
+/* HUD buttons: lighter, flatter controls */
+.start-btn, .sound-btn {
+  background: #fff;
+  border: 1px solid rgba(2,6,23,0.06);
+  color: var(--cw-dark);
+  box-shadow: 0 6px 14px rgba(2,6,23,0.04);
+}
+
+/* reduce visual noise for grid cells */
+.grid-cell {
+  outline: none;
+  border-radius: 10px;
+  box-shadow: none;
+  transition: transform 160ms ease, box-shadow 160ms ease;
+}
+.grid-cell.pop { transform: translateY(-4px); box-shadow: 0 12px 26px rgba(2,6,23,0.06); }
+
+/* confetti: slightly warmer colors to match brand */
+.confetti-canvas { z-index: 80; }
+
+/* focus ring aligned with brand */
+:focus { outline: 3px solid var(--focus-ring); outline-offset: 4px; }
+
+/* responsive tweaks: ensure hero and CTA remain balanced on small screens */
+@media (max-width:520px) {
+  .banner-hero { padding: 12px; gap:10px; }
+  .hero-title { font-size: 28px; }
+  .cta-wrap { justify-content: center; }
+}

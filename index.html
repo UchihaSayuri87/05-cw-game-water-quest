@@ -16,33 +16,21 @@
 
 	<!-- Brand strip: moved to the top so branding stands out immediately -->
 	<div class="brand-strip" aria-hidden="false">
-		<img class="brand-square"
-		     role="img"
-		     tabindex="0"
-		     alt="charity: water mark"
-		     aria-label="charity: water mark"
-		     src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='60' height='60' viewBox='0 0 60 60'><rect width='60' height='60' rx='6' fill='%23FFC907'/></svg>" />
+		<!-- improved square mark: subtle drop + rounded yellow block -->
+		<img class="brand-square" role="img" tabindex="0" alt="charity: water mark" aria-label="charity: water mark"
+		     src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='64' height='64' viewBox='0 0 64 64'><rect width='64' height='64' rx='10' fill='%23FFC907'/><path d='M32 12c5 6.5 10 11.5 10 18 0 5.5-4.5 10-10 10s-10-4.5-10-10c0-6.5 5-11.5 10-18z' fill='%2307243a' opacity='0.06'/></svg>" />
 
-		<img class="brand-horizontal"
-		     role="img"
-		     tabindex="0"
-		     alt="Clarity Water wordmark"
-		     aria-label="Clarity Water wordmark"
-		     src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='360' height='60' viewBox='0 0 360 60'><rect x='6' y='6' width='48' height='48' rx='6' fill='%23FFC907'/><text x='68' y='38' font-family='Montserrat, Arial, sans-serif' font-size='22' fill='%2307243a' font-weight='700'>Clarity Water</text></svg>" />
+		<!-- improved horizontal wordmark: strong type + drop icon -->
+		<img class="brand-horizontal" role="img" tabindex="0" alt="charity: water wordmark" aria-label="charity: water wordmark"
+		     src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 420 64' width='420' height='64'><g fill='none' fill-rule='evenodd'><rect x='6' y='6' width='48' height='48' rx='8' fill='%23FFC907'/><text x='70' y='42' font-family='Montserrat,Arial,sans-serif' font-size='24' font-weight='700' fill='%23072b3a'>charity: water</text></g></svg>" />
 	</div>
 
  	<!-- new top banner (uses img/banner.png). If it fails to load the inline onerror adds .banner-broken) -->
  	<div class="banner-wrapper">
 		<!-- banner close: allows dismissing a stuck banner -->
 		<button id="bannerClose" type="button" class="banner-close" aria-label="Close banner">✕</button>
- 		<!-- inline SVG banner fallback to avoid 404 when img/banner.png is missing -->
- 		<img id="topBanner"
- 		     class="top-banner"
- 		     loading="lazy"
- 		     src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='1200' height='280' viewBox='0 0 1200 280'><rect width='1200' height='280' rx='12' fill='%23FFC907'/><text x='50%' y='55%' dominant-baseline='middle' text-anchor='middle' font-family='Arial,Helvetica,sans-serif' font-size='56' fill='%2307243a' font-weight='700'>Water Quest</text></svg>"
- 		     onerror="this.onerror=null; document.documentElement.classList.add('banner-broken');" />
 
- 		<!-- Hero fallback: original header placed inside the hero, plus icon/title/play -->
+ 		<!-- Hero: use the fallback hero markup (we removed the embedded banner image so this is visible) -->
  		<div class="banner-fallback"><!-- removed aria-hidden="true" to avoid focus/aria-hidden conflict -->
  			<div class="banner-hero">
  				<header class="site-header">
@@ -59,7 +47,8 @@
  					</div>
  				</header>
 
- 				<div class="hero-icon" aria-hidden="true"></div>
+ 				<!-- hero mark: a simple container with a drop-shaped mark inside (styled in CSS) -->
+ 				<div class="hero-icon" aria-hidden="true"><div class="drop-mark" aria-hidden="true"></div></div>
  				<h2 class="hero-title">WATER<br/>QUEST</h2>
  				<button id="bannerPlay" type="button" class="banner-play">PLAY</button>
  			</div>
@@ -74,14 +63,15 @@
 			<!-- added: reset button to restart immediately, difficulty selector, and tutorial button -->
 			<div style="display:flex; gap:8px; align-items:center;">
 				<button id="resetBtn" type="button" class="start-btn" title="Reset and restart">Reset</button>
-				<label for="difficultySelect" style="font-weight:600; color:var(--cw-dark); font-size:0.95rem; margin-left:6px;">Difficulty</label>
-				<select id="difficultySelect" aria-label="Select difficulty" style="padding:6px 8px; border-radius:8px; border:1px solid rgba(7,43,58,0.08); background:white;">
-					<option value="easy">Easy</option>
-					<option value="normal" selected>Normal</option>
-					<option value="master">MasterQuest</option>
-				</select>
-				<button id="tutorialBtn" type="button" class="start-btn" title="How to play">How to play</button>
-			</div>
+				<!-- sound toggle: toggles audio on/off, uses emoji for a compact UI -->
+				<button id="soundToggle" type="button" class="start-btn sound-btn" aria-pressed="false" title="Toggle sounds">🔊</button>
+ 				<label for="difficultySelect" style="font-weight:600; color:var(--cw-dark); font-size:0.95rem; margin-left:6px;">Difficulty</label>
+ 				<select id="difficultySelect" aria-label="Select difficulty" style="padding:6px 8px; border-radius:8px; border:1px solid rgba(7,43,58,0.08); background:white;">
+ 					<option value="easy">Easy</option>
+ 					<option value="normal" selected>Normal</option>
+ 					<option value="master">MasterQuest</option>
+ 				</select>
+ 			</div>
 		</section>
 
 		<section id="gameField" class="game-field" aria-live="polite">
@@ -108,7 +98,18 @@
 			<div class="progress-text" aria-hidden="true"><span id="progressPercent">0%</span> toward goal</div>
 		</section>
 		</main>
-	</div> <!-- /.container -->
+		<!-- CTA: place inside the card so it sits with the content (aligned to the right) -->
+		<div class="cta-wrap" aria-hidden="false">
+		  <a id="charitySplashBtn"
+		     class="splash-btn"
+		     href="https://www.charitywater.org/"
+		     target="_blank"
+		     rel="noopener noreferrer"
+		     title="Find out ways you can make a splash for clean water">
+		     Find out ways you can make a splash for clean water
+		  </a>
+		</div>
+ 	</div> <!-- /.container -->
  
  	<div id="overlay" class="overlay hidden" role="dialog" aria-modal="true">
 		<!-- End-game panel -->
@@ -121,35 +122,9 @@
 				<button id="closeEndBtn" type="button" class="start-btn">Close</button>
 			</div>
 		</div>
- 
- 		<!-- Tutorial panel (hidden by default) -->
- 		<div id="tutorialPanel" class="overlay-content hidden" aria-hidden="true">
-			<h2>How to play</h2>
-			<div class="tutorial-body">
-				<p><strong>Goal:</strong> Tap the clean yellow jerry-cans to earn points. Reach 10 points to win.</p>
-				<ul>
-					<li>Each clean can tapped = +1 point.</li>
-					<li>Dirty/obstacle cans deduct points (avoid them).</li>
-					<li>You have 30 seconds — a countdown timer is shown in the HUD.</li>
-					<li>Use the <em>Difficulty</em> selector to change spawn rate and challenge; use <em>Reset</em> to restart immediately.</li>
-					<li>Keyboard: TAB to a cell and press Enter/Space to tap the can inside it.</li>
-				</ul>
-				<p class="tutorial-note">Tip: try Normal or MasterQuest for faster spawns once you get comfortable.</p>
-
-				<!-- new: option to skip tutorial in future and a quick "skip & play" action -->
-				<div style="display:flex; gap:8px; align-items:center; justify-content:center; margin-top:10px;">
-					<label style="display:flex; align-items:center; gap:8px; font-size:14px;">
-						<input id="dontShowTutorial" type="checkbox" />
-						<span>Don't show again</span>
-					</label>
-					<button id="skipTutorialBtn" type="button" class="start-btn">Skip &amp; Play</button>
-					<button id="closeTutorialBtn" type="button" class="start-btn">Close</button>
-				</div>
-			</div>
- 		</div>
  	</div>
 	<!-- container closed above -->
 
-	<script src="script.js"></script>
+ 	<script src="script.js"></script>
  </body>
  </html>

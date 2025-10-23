@@ -14,16 +14,17 @@ const resultTitle = document.getElementById('resultTitle');
 const resultMessage = document.getElementById('resultMessage');
 const bannerWrapEl = document.querySelector('.banner-wrapper');
 const bannerPlayEl = document.getElementById('bannerPlay');
-const topBannerEl = document.getElementById('topBanner');
 const bannerCloseEl = document.getElementById('bannerClose');
-
-// add missing banner auto-hide constants/vars so startBannerAutoHide can reference them
-const BANNER_AUTO_HIDE_MS = 60 * 1000;
-let bannerAutoHideTimer = null;
 
 const GAME_TIME = 30;
 const WIN_THRESHOLD = 10;
 const BAD_PENALTY = 2;
+
+/* Re-introduce these minimal banner auto-hide vars so startBannerAutoHide()
+   and hideBanner() can reference them without throwing. Keeping the values
+   is safe (no visible change) and avoids a runtime ReferenceError. */
+const BANNER_AUTO_HIDE_MS = 60 * 1000;
+let bannerAutoHideTimer = null;
 
 // difficulty configurations
 const DIFFICULTY_CONFIGS = {
@@ -237,6 +238,9 @@ function startGame() {
 		// clear milestone state for a fresh run
 		shownMilestones.clear();
 
+		// play start sound
+		playSound('start');
+
 		// hide overlays/banners using centralized helpers so timers/inert states are handled
 		if (overlay) overlay.classList.add('hidden');
 		hideBanner();
@@ -274,6 +278,9 @@ function endGame() {
 	const msg = pool[Math.floor(Math.random() * pool.length)];
 	if (resultTitle) resultTitle.textContent = isWin ? 'You win!' : (score < WIN_THRESHOLD ? 'Try again' : '');
 	if (resultMessage) resultMessage.textContent = msg;
+
+	// play win sound for winners (non-blocking)
+	if (isWin) playSound('win');
 
 	// show overlay end panel via helper (endPanel exists in DOM)
 	const endPanelEl = document.getElementById('endPanel');
@@ -327,33 +334,6 @@ function startBannerAutoHide() {
 
 // ensure the banner auto-hide begins when script initializes (page loaded)
 startBannerAutoHide();
-
-/* -----------------------------------------
-   Banner: switch between image vs fallback
-   ----------------------------------------- */
-function _updateBannerModeOnLoad() {
-  if (!bannerWrapEl || !topBannerEl) return;
-  // image loaded successfully -> use image, hide fallback hero
-  function showImageMode() {
-    bannerWrapEl.classList.add('banner-with-image');
-    bannerWrapEl.classList.remove('banner-broken');
-  }
-  function showFallbackMode() {
-    bannerWrapEl.classList.remove('banner-with-image');
-    bannerWrapEl.classList.add('banner-broken');
-  }
-
-  if ('complete' in topBannerEl && topBannerEl.complete) {
-    // if naturalWidth available and non-zero, image rendered
-    if (topBannerEl.naturalWidth && topBannerEl.naturalWidth > 0) showImageMode();
-    else showFallbackMode();
-  } else {
-    topBannerEl.addEventListener('load', showImageMode, { once: true });
-    topBannerEl.addEventListener('error', showFallbackMode, { once: true });
-  }
-}
-// call once on init
-_updateBannerModeOnLoad();
 
 // --- Confetti (single consolidated implementation) ---
 let _confettiCanvas = null;
@@ -454,27 +434,85 @@ const _DIRTY_CAN_SVG = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 
 </svg>`;
 const DIRTY_CAN_URI = 'data:image/svg+xml;utf8,' + encodeURIComponent(_DIRTY_CAN_SVG);
 
-// Preload brand assets — skip when DEV_MODE to avoid network checks during development
+// sound assets (place audio files in /workspaces/05-cw-game-water-quest/sound)
+// recommended filenames: pop.mp3, bad.mp3, start.mp3, win.mp3
+const SOUND_FILES = {
+  pop:  'sound/pop.mp3',
+  bad:  'sound/bad.mp3',
+  start:'sound/start.mp3',
+  win:  'sound/win.mp3'
+};
+
+let sounds = {};          // will hold Audio objects or null on error
+let soundEnabled = true;  // user-controlled mute state
+
+// preload simple audio elements (fails silently if file missing)
+function preloadSounds() {
+  Object.keys(SOUND_FILES).forEach(key => {
+    try {
+      const audio = new Audio(SOUND_FILES[key]);
+      audio.preload = 'auto';
+      audio.volume = 0.9;
+      // mark as available once canplaythrough fires; otherwise swallow error
+      audio.addEventListener('canplaythrough', () => { sounds[key] = audio; }, { once: true });
+      audio.addEventListener('error', () => { sounds[key] = null; }, { once: true });
+      // start loading
+      audio.load();
+      // keep a reference even if canplaythrough hasn't fired yet
+      sounds[key] = audio;
+    } catch (e) {
+      sounds[key] = null;
+    }
+  });
+}
+
+// ensure sounds begin loading immediately (defensive; missing files won't throw)
+preloadSounds();
+
+// wire the HUD sound toggle button (re-add wiring so mute/unmute works)
+const soundToggle = document.getElementById('soundToggle');
+if (soundToggle) {
+  // initialize aria state & icon
+  soundToggle.setAttribute('aria-pressed', String(!soundEnabled));
+  soundToggle.textContent = soundEnabled ? '🔊' : '🔈';
+
+  soundToggle.addEventListener('click', (e) => {
+    e?.preventDefault();
+    soundEnabled = !soundEnabled;
+    soundToggle.setAttribute('aria-pressed', String(!soundEnabled));
+    soundToggle.textContent = soundEnabled ? '🔊' : '🔈';
+  });
+}
+
+// Add missing brand asset preloader (defensive, no-op in DEV_MODE)
 function preloadBrandAssets() {
-  if (DEV_MODE) {
-    // in dev mode we rely on inlined assets; ensure no marker classes exist
-    document.documentElement.classList.remove('no-water-can', 'no-dirty-can');
+  try {
+    if (typeof DEV_MODE !== 'undefined' && DEV_MODE) {
+      // in dev mode we rely on inlined assets; ensure no marker classes exist
+      document.documentElement.classList.remove('no-water-can', 'no-dirty-can');
+      return;
+    }
+  } catch (_) {
     return;
   }
 
-  const html = document.documentElement;
-  const assets = [
-    { src: 'img/water-can.png', missingClass: 'no-water-can' },
-    { src: 'img/dirty-can.png', missingClass: 'no-dirty-can' }
-  ];
+  try {
+    const html = document.documentElement;
+    const assets = [
+      { src: 'img/water-can.png', missingClass: 'no-water-can' },
+      { src: 'img/dirty-can.png', missingClass: 'no-dirty-can' }
+    ];
 
-  assets.forEach(({ src, missingClass }) => {
-    html.classList.remove(missingClass);
-    const img = new Image();
-    img.onload = () => { html.classList.remove(missingClass); };
-    img.onerror = () => { html.classList.add(missingClass); };
-    img.src = src;
-  });
+    assets.forEach(({ src, missingClass }) => {
+      html.classList.remove(missingClass);
+      const img = new Image();
+      img.onload = () => { html.classList.remove(missingClass); };
+      img.onerror = () => { html.classList.add(missingClass); };
+      img.src = src;
+    });
+  } catch (_) {
+    // swallow any errors — this is best-effort only
+  }
 }
 
 // call preloader early so UI logic knows which assets exist (no-op in DEV_MODE)
@@ -548,6 +586,7 @@ function handleCanTap(can) {
 
 		score = Math.max(0, score - BAD_PENALTY);
 		showAchievement(`-${BAD_PENALTY} (dirty can)`);
+		playSound('bad');
 	} else {
 		setTimeout(() => {
 			if (cell) cell.classList.remove('pop');
@@ -570,6 +609,7 @@ function handleCanTap(can) {
 		if (!milestoneShown) {
 			showAchievement('+1');
 		}
+		playSound('pop');
 	}
 
 	updateHUD();
@@ -619,27 +659,19 @@ document.addEventListener('keydown', (e) => {
 	}
 });
 
-// banner PLAY handlers
+// banner PLAY handlers (kept simple)
 bannerPlayEl?.addEventListener('click', (e) => {
 	e?.preventDefault();
 	hideBanner();
 	startGame();
 });
-topBannerEl?.addEventListener('click', (e) => {
-	const el = e.currentTarget;
-	if (!el) return;
-	const style = window.getComputedStyle(el);
-	if (style && (style.display === 'none' || style.visibility === 'hidden' || el.hasAttribute('hidden'))) return;
-	e.preventDefault();
-	hideBanner();
-	startGame();
-});
 
-// wire the banner close button — ensure auto-hide timer and focus are handled
+// remove topBannerEl click handler (no longer needed)
+
+// banner close logic: keep; just hide the wrapper
 bannerCloseEl?.addEventListener('click', (e) => {
   e?.preventDefault();
-  hideBanner();
-  // don't start the game unless the user explicitly presses play
+  if (bannerWrapEl) bannerWrapEl.classList.add('hidden');
 });
 
 // wire reset button and difficulty selector (listeners added once)
@@ -861,50 +893,6 @@ function overlayHide() {
   // resume game if it was paused by modal
   _resumeGameFromModal();
 }
-
-// --- Tutorial modal wiring ---
-const tutorialBtn = document.getElementById('tutorialBtn');
-const tutorialPanel = document.getElementById('tutorialPanel');
-const closeTutorialBtn = document.getElementById('closeTutorialBtn');
-const skipTutorialBtn = document.getElementById('skipTutorialBtn');
-const dontShowTutorialCheckbox = document.getElementById('dontShowTutorial');
-
-// If the user opted out previously, hide the tutorial trigger button
-if (localStorage.getItem('dontShowTutorial') === '1') {
-  try { if (tutorialBtn && tutorialBtn.parentElement) tutorialBtn.style.display = 'none'; } catch(_) {}
-}
-
-tutorialBtn?.addEventListener('click', (e) => {
-  e?.preventDefault();
-  const panel = document.getElementById('tutorialPanel');
-  if (panel) {
-    overlayShow(panel);
-  }
-});
-
-// close tutorial button
-closeTutorialBtn?.addEventListener('click', (e) => {
-  e?.preventDefault();
-  // persist preference if checked
-  if (dontShowTutorialCheckbox && dontShowTutorialCheckbox.checked) {
-    try { localStorage.setItem('dontShowTutorial', '1'); } catch(_) {}
-    if (tutorialBtn) tutorialBtn.style.display = 'none';
-  }
-  overlayHide();
-});
-
-// skip & play: persist preference if checked, close tutorial and start game
-skipTutorialBtn?.addEventListener('click', (e) => {
-  e?.preventDefault();
-  if (dontShowTutorialCheckbox && dontShowTutorialCheckbox.checked) {
-    try { localStorage.setItem('dontShowTutorial', '1'); } catch(_) {}
-    if (tutorialBtn) tutorialBtn.style.display = 'none';
-  }
-  overlayHide();
-  hideBanner();
-  // small delay so overlay hide/focus restoration runs before starting the game
-  setTimeout(() => startGame(), 120);
-});
 
 // allow clicking outside the modal panel (on the overlay backdrop) to close it
 overlay?.addEventListener('pointerdown', (e) => {
