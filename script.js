@@ -21,8 +21,7 @@ const WIN_THRESHOLD = 10;
 const BAD_PENALTY = 2;
 
 /* Re-introduce these minimal banner auto-hide vars so startBannerAutoHide()
-   and hideBanner() can reference them without throwing. Keeping the values
-   is safe (no visible change) and avoids a runtime ReferenceError. */
+   and hideBanner() can reference them without throwing. */
 const BANNER_AUTO_HIDE_MS = 60 * 1000;
 let bannerAutoHideTimer = null;
 
@@ -417,7 +416,7 @@ function stopConfetti() { if (_confettiAnim) cancelAnimationFrame(_confettiAnim)
 /* Dev mode: set window.__DEV_MODE = true in the console or add ?dev=1 to the URL to skip network preload checks */
 const DEV_MODE = Boolean(window.__DEV_MODE) || (new URLSearchParams(location.search).get('dev') === '1');
 
-// small clean jerry-can SVG (keeps visuals consistent with in-game can)
+/* small clean jerry-can SVG (keeps visuals consistent with in-game can)
 const _WATER_CAN_SVG = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'>
   <rect x='8' y='16' width='48' height='32' rx='6' fill='%23FFC907'/>
   <rect x='12' y='8' width='8' height='10' rx='2' fill='%23072b3a'/>
@@ -433,9 +432,9 @@ const _DIRTY_CAN_SVG = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 
   <circle cx='46' cy='14' r='5' fill='%23111'/>
 </svg>`;
 const DIRTY_CAN_URI = 'data:image/svg+xml;utf8,' + encodeURIComponent(_DIRTY_CAN_SVG);
+*/
 
 // sound assets (place audio files in /workspaces/05-cw-game-water-quest/sound)
-// recommended filenames: pop.mp3, bad.mp3, start.mp3, win.mp3
 const SOUND_FILES = {
   pop:  'sound/pop.mp3',
   bad:  'sound/bad.mp3',
@@ -453,12 +452,9 @@ function preloadSounds() {
       const audio = new Audio(SOUND_FILES[key]);
       audio.preload = 'auto';
       audio.volume = 0.9;
-      // mark as available once canplaythrough fires; otherwise swallow error
       audio.addEventListener('canplaythrough', () => { sounds[key] = audio; }, { once: true });
       audio.addEventListener('error', () => { sounds[key] = null; }, { once: true });
-      // start loading
       audio.load();
-      // keep a reference even if canplaythrough hasn't fired yet
       sounds[key] = audio;
     } catch (e) {
       sounds[key] = null;
@@ -470,13 +466,10 @@ function preloadSounds() {
 function preloadBrandAssets() {
   try {
     if (typeof DEV_MODE !== 'undefined' && DEV_MODE) {
-      // in dev mode we rely on inlined assets; ensure no marker classes exist
       document.documentElement.classList.remove('no-water-can', 'no-dirty-can');
       return;
     }
-  } catch (_) {
-    return;
-  }
+  } catch (_) { return; }
 
   try {
     const html = document.documentElement;
@@ -492,9 +485,7 @@ function preloadBrandAssets() {
       img.onerror = () => { html.classList.add(missingClass); };
       img.src = src;
     });
-  } catch (_) {
-    // swallow any errors — this is best-effort only
-  }
+  } catch (_) { /* ignore */ }
 }
 
 // call preloader early so UI logic knows which assets exist (no-op in DEV_MODE)
@@ -910,7 +901,6 @@ document.addEventListener('keydown', (e) => {
   try {
     const soundToggleBtn = document.getElementById('soundToggle');
     if (soundToggleBtn) {
-      // aria-pressed = true when muted (keeps previous convention)
       soundToggleBtn.setAttribute('aria-pressed', String(!soundEnabled));
       soundToggleBtn.textContent = soundEnabled ? '🔊' : '🔈';
       soundToggleBtn.addEventListener('click', (e) => {
@@ -921,7 +911,7 @@ document.addEventListener('keydown', (e) => {
       });
     }
 
-    // accessibility: move programmatic focus to the Play button so keyboard users can start quickly
+    // accessibility: focus Play so keyboard users can start quickly
     try {
       if (bannerPlayEl && typeof bannerPlayEl.focus === 'function') {
         bannerPlayEl.setAttribute('aria-label', bannerPlayEl.getAttribute('aria-label') || 'Play Water Quest');
@@ -946,9 +936,7 @@ window.addEventListener('pagehide', () => {
 // ensure beforeunload also clears timers in addition to saving state
 window.addEventListener('beforeunload', (e) => {
   try {
-    // save state (existing function) — keep original behavior
     saveState();
-    // clear timers to avoid any lingering work (defensive)
     clearTimeout(popTimer); popTimer = null;
     clearInterval(countdownTimer); countdownTimer = null;
     if (bannerAutoHideTimer) { clearTimeout(bannerAutoHideTimer); bannerAutoHideTimer = null; }

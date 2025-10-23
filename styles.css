@@ -777,3 +777,1237 @@ h1 { text-align:center; font-size:30px; font-weight:bold; color:var(--cw-blue); 
   max-width:880px;
   margin: 8px auto 0;
   padding: 6px 0;
+}
+
+/* game-field constrained for better visual balance on large screens */
+.game-field{
+  position:relative;
+  width: 100%;
+  max-width: 820px;
+  height: 56vh;
+  min-height:320px;
+  margin: 12px auto;
+
+  /* increased padding so the playable area has breathing room */
+  padding: 18px;
+  display: flex;
+  align-items: center;       /* center grid vertically */
+  justify-content: center;   /* center grid horizontally */
+
+  background: linear-gradient(180deg, rgba(46,157,247,0.04), rgba(46,157,247,0.01));
+  border-radius:12px;
+  overflow:hidden;
+  border: 2px solid rgba(46,157,247,0.08);
+}
+
+/* HUD: give controls a compact layout and keep score/timer visible */
+.hud {
+  display:flex;
+  gap:12px;
+  align-items:center;
+  justify-content:space-between;
+  width:100%;
+  /* make room when controls added */
+}
+
+/* small HUD controls (reset + difficulty select) */
+.hud > div {
+  display:flex;
+  gap:8px;
+  align-items:center;
+}
+
+/* Header / branding */
+.site-header{
+  display:flex;
+  align-items:center;
+  gap:1rem;
+  width:100%;
+  justify-content: center;
+  max-width:980px;
+  box-sizing: border-box;
+  padding: 0 8px;
+}
+.logo{ height:56px; width:auto; display:block; flex-shrink:0; }
+.title-block h1{ margin:0; font-size:1.5rem; color:var(--cw-dark); }
+.tagline{ margin:0; color:#06638b; font-size:0.95rem; }
+
+/* Make the original header visible inside the hero and style it for the yellow banner */
+.banner-hero .site-header .logo {
+  height: 48px;
+  width: auto;
+  display: block;
+}
+
+/* Make the title and tagline readable on the yellow hero */
+.banner-hero .title-block h1 {
+  margin: 0;
+  font-size: 1.2rem;
+  color: #072b3a; /* choose dark for contrast against yellow */
+  font-weight: 800;
+}
+.banner-hero .title-block .tagline {
+  margin: 0;
+  color: rgba(7,43,58,0.9);
+  font-size: 0.95rem;
+}
+
+/* Basic headings */
+h1 { text-align:center; font-size:30px; font-weight:bold; color:var(--cw-blue); margin:0 0 8px 0; }
+
+/* Game field (drop area) */
+.game-field{
+  position:relative;
+  height:60vh;
+  min-height:360px;
+  margin-top:1rem;
+
+  /* increased padding so the playable area has breathing room */
+  padding: 24px;
+  display: flex;
+  align-items: center;       /* center grid vertically */
+  justify-content: center;   /* center grid horizontally */
+
+  background: linear-gradient(180deg, rgba(46,157,247,0.04), rgba(46,157,247,0.01));
+  border-radius:12px;
+  overflow:hidden;
+  border: 2px solid rgba(46,157,247,0.08);
+}
+
+/* Game grid: fixed 3x3 grid for stable gameplay (min cell width, responsive) */
+.game-grid {
+  width: min(720px, 96%);
+  display: grid;
+  grid-template-columns: repeat(3, minmax(120px, 1fr)); /* force 3 columns */
+  gap: clamp(8px, 1.6vw, 16px);
+  margin: 6px auto;
+}
+
+/* Make grid cells consistent squares so touch targets are predictable */
+.grid-cell{
+  position: relative;
+  overflow: visible; /* allow wrappers to pop outside slightly */
+  aspect-ratio: 1 / 1;         /* keep cells square */
+  min-height: 120px;           /* fallback for browsers without aspect-ratio */
+  padding: 8px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  outline: 1px solid rgba(2,6,23,0.04);
+  box-shadow: 0 4px 10px rgba(2,8,20,0.04);
+  cursor:pointer;
+  transition:background-color 0.3s;
+
+  /* Make grid cells easier to tap: breathing room, mobile touch handling */
+  padding: 6px;
+  touch-action: manipulation;
+}
+
+/* HUD sound toggle button */
+.sound-btn {
+  padding: 8px 10px;
+  font-size: 15px;
+  border-radius: 8px;
+  min-width: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(180deg, rgba(2,43,60,0.06), rgba(2,43,60,0.02));
+  color: var(--cw-dark);
+  border: 1px solid rgba(2,6,23,0.06);
+  box-shadow: 0 6px 14px rgba(2,6,23,0.04);
+}
+.sound-btn[aria-pressed="true"] {
+  background: linear-gradient(180deg, rgba(2,43,60,0.12), rgba(2,43,60,0.06));
+  color: #fff;
+  border-color: rgba(2,6,23,0.12);
+}
+
+/* CTA (card-aligned) styled to match charity: water primary action */
+.splash-btn {
+  background: transparent;
+  color: var(--cw-blue);
+  border: 2px solid rgba(0,174,239,0.12);
+  padding: 10px 16px;
+  border-radius: 999px;
+  font-weight:700;
+  box-shadow: none;
+}
+.splash-btn:hover {
+  background: rgba(0,174,239,0.06);
+  transform: translateY(-2px);
+}
+
+/* Make the game-wrap sit nicely inside the card */
+.game-wrap{
+  width:100%;
+  max-width:880px;
+  margin: 8px auto 0;
+  padding: 6px 0;
+}
+
+/* game-field constrained for better visual balance on large screens */
+.game-field{
+  position:relative;
+  width: 100%;
+  max-width: 820px;
+  height: 56vh;
+  min-height:320px;
+  margin: 12px auto;
+
+  /* increased padding so the playable area has breathing room */
+  padding: 18px;
+  display: flex;
+  align-items: center;       /* center grid vertically */
+  justify-content: center;   /* center grid horizontally */
+
+  background: linear-gradient(180deg, rgba(46,157,247,0.04), rgba(46,157,247,0.01));
+  border-radius:12px;
+  overflow:hidden;
+  border: 2px solid rgba(46,157,247,0.08);
+}
+
+/* HUD: give controls a compact layout and keep score/timer visible */
+.hud {
+  display:flex;
+  gap:12px;
+  align-items:center;
+  justify-content:space-between;
+  width:100%;
+  /* make room when controls added */
+}
+
+/* small HUD controls (reset + difficulty select) */
+.hud > div {
+  display:flex;
+  gap:8px;
+  align-items:center;
+}
+
+/* Header / branding */
+.site-header{
+  display:flex;
+  align-items:center;
+  gap:1rem;
+  width:100%;
+  justify-content: center;
+  max-width:980px;
+  box-sizing: border-box;
+  padding: 0 8px;
+}
+.logo{ height:56px; width:auto; display:block; flex-shrink:0; }
+.title-block h1{ margin:0; font-size:1.5rem; color:var(--cw-dark); }
+.tagline{ margin:0; color:#06638b; font-size:0.95rem; }
+
+/* Make the original header visible inside the hero and style it for the yellow banner */
+.banner-hero .site-header .logo {
+  height: 48px;
+  width: auto;
+  display: block;
+}
+
+/* Make the title and tagline readable on the yellow hero */
+.banner-hero .title-block h1 {
+  margin: 0;
+  font-size: 1.2rem;
+  color: #072b3a; /* choose dark for contrast against yellow */
+  font-weight: 800;
+}
+.banner-hero .title-block .tagline {
+  margin: 0;
+  color: rgba(7,43,58,0.9);
+  font-size: 0.95rem;
+}
+
+/* Basic headings */
+h1 { text-align:center; font-size:30px; font-weight:bold; color:var(--cw-blue); margin:0 0 8px 0; }
+
+/* Game field (drop area) */
+.game-field{
+  position:relative;
+  height:60vh;
+  min-height:360px;
+  margin-top:1rem;
+
+  /* increased padding so the playable area has breathing room */
+  padding: 24px;
+  display: flex;
+  align-items: center;       /* center grid vertically */
+  justify-content: center;   /* center grid horizontally */
+
+  background: linear-gradient(180deg, rgba(46,157,247,0.04), rgba(46,157,247,0.01));
+  border-radius:12px;
+  overflow:hidden;
+  border: 2px solid rgba(46,157,247,0.08);
+}
+
+/* Game grid: fixed 3x3 grid for stable gameplay (min cell width, responsive) */
+.game-grid {
+  width: min(720px, 96%);
+  display: grid;
+  grid-template-columns: repeat(3, minmax(120px, 1fr)); /* force 3 columns */
+  gap: clamp(8px, 1.6vw, 16px);
+  margin: 6px auto;
+}
+
+/* Make grid cells consistent squares so touch targets are predictable */
+.grid-cell{
+  position: relative;
+  overflow: visible; /* allow wrappers to pop outside slightly */
+  aspect-ratio: 1 / 1;         /* keep cells square */
+  min-height: 120px;           /* fallback for browsers without aspect-ratio */
+  padding: 8px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  outline: 1px solid rgba(2,6,23,0.04);
+  box-shadow: 0 4px 10px rgba(2,8,20,0.04);
+  cursor:pointer;
+  transition:background-color 0.3s;
+
+  /* Make grid cells easier to tap: breathing room, mobile touch handling */
+  padding: 6px;
+  touch-action: manipulation;
+}
+
+/* HUD sound toggle button */
+.sound-btn {
+  padding: 8px 10px;
+  font-size: 15px;
+  border-radius: 8px;
+  min-width: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(180deg, rgba(2,43,60,0.06), rgba(2,43,60,0.02));
+  color: var(--cw-dark);
+  border: 1px solid rgba(2,6,23,0.06);
+  box-shadow: 0 6px 14px rgba(2,6,23,0.04);
+}
+.sound-btn[aria-pressed="true"] {
+  background: linear-gradient(180deg, rgba(2,43,60,0.12), rgba(2,43,60,0.06));
+  color: #fff;
+  border-color: rgba(2,6,23,0.12);
+}
+
+/* CTA (card-aligned) styled to match charity: water primary action */
+.splash-btn {
+  background: transparent;
+  color: var(--cw-blue);
+  border: 2px solid rgba(0,174,239,0.12);
+  padding: 10px 16px;
+  border-radius: 999px;
+  font-weight:700;
+  box-shadow: none;
+}
+.splash-btn:hover {
+  background: rgba(0,174,239,0.06);
+  transform: translateY(-2px);
+}
+
+/* Make the game-wrap sit nicely inside the card */
+.game-wrap{
+  width:100%;
+  max-width:880px;
+  margin: 8px auto 0;
+  padding: 6px 0;
+}
+
+/* game-field constrained for better visual balance on large screens */
+.game-field{
+  position:relative;
+  width: 100%;
+  max-width: 820px;
+  height: 56vh;
+  min-height:320px;
+  margin: 12px auto;
+
+  /* increased padding so the playable area has breathing room */
+  padding: 18px;
+  display: flex;
+  align-items: center;       /* center grid vertically */
+  justify-content: center;   /* center grid horizontally */
+
+  background: linear-gradient(180deg, rgba(46,157,247,0.04), rgba(46,157,247,0.01));
+  border-radius:12px;
+  overflow:hidden;
+  border: 2px solid rgba(46,157,247,0.08);
+}
+
+/* HUD: give controls a compact layout and keep score/timer visible */
+.hud {
+  display:flex;
+  gap:12px;
+  align-items:center;
+  justify-content:space-between;
+  width:100%;
+  /* make room when controls added */
+}
+
+/* small HUD controls (reset + difficulty select) */
+.hud > div {
+  display:flex;
+  gap:8px;
+  align-items:center;
+}
+
+/* Header / branding */
+.site-header{
+  display:flex;
+  align-items:center;
+  gap:1rem;
+  width:100%;
+  justify-content: center;
+  max-width:980px;
+  box-sizing: border-box;
+  padding: 0 8px;
+}
+.logo{ height:56px; width:auto; display:block; flex-shrink:0; }
+.title-block h1{ margin:0; font-size:1.5rem; color:var(--cw-dark); }
+.tagline{ margin:0; color:#06638b; font-size:0.95rem; }
+
+/* Make the original header visible inside the hero and style it for the yellow banner */
+.banner-hero .site-header .logo {
+  height: 48px;
+  width: auto;
+  display: block;
+}
+
+/* Make the title and tagline readable on the yellow hero */
+.banner-hero .title-block h1 {
+  margin: 0;
+  font-size: 1.2rem;
+  color: #072b3a; /* choose dark for contrast against yellow */
+  font-weight: 800;
+}
+.banner-hero .title-block .tagline {
+  margin: 0;
+  color: rgba(7,43,58,0.9);
+  font-size: 0.95rem;
+}
+
+/* Basic headings */
+h1 { text-align:center; font-size:30px; font-weight:bold; color:var(--cw-blue); margin:0 0 8px 0; }
+
+/* Game field (drop area) */
+.game-field{
+  position:relative;
+  height:60vh;
+  min-height:360px;
+  margin-top:1rem;
+
+  /* increased padding so the playable area has breathing room */
+  padding: 24px;
+  display: flex;
+  align-items: center;       /* center grid vertically */
+  justify-content: center;   /* center grid horizontally */
+
+  background: linear-gradient(180deg, rgba(46,157,247,0.04), rgba(46,157,247,0.01));
+  border-radius:12px;
+  overflow:hidden;
+  border: 2px solid rgba(46,157,247,0.08);
+}
+
+/* Game grid: fixed 3x3 grid for stable gameplay (min cell width, responsive) */
+.game-grid {
+  width: min(720px, 96%);
+  display: grid;
+  grid-template-columns: repeat(3, minmax(120px, 1fr)); /* force 3 columns */
+  gap: clamp(8px, 1.6vw, 16px);
+  margin: 6px auto;
+}
+
+/* Make grid cells consistent squares so touch targets are predictable */
+.grid-cell{
+  position: relative;
+  overflow: visible; /* allow wrappers to pop outside slightly */
+  aspect-ratio: 1 / 1;         /* keep cells square */
+  min-height: 120px;           /* fallback for browsers without aspect-ratio */
+  padding: 8px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  outline: 1px solid rgba(2,6,23,0.04);
+  box-shadow: 0 4px 10px rgba(2,8,20,0.04);
+  cursor:pointer;
+  transition:background-color 0.3s;
+
+  /* Make grid cells easier to tap: breathing room, mobile touch handling */
+  padding: 6px;
+  touch-action: manipulation;
+}
+
+/* HUD sound toggle button */
+.sound-btn {
+  padding: 8px 10px;
+  font-size: 15px;
+  border-radius: 8px;
+  min-width: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(180deg, rgba(2,43,60,0.06), rgba(2,43,60,0.02));
+  color: var(--cw-dark);
+  border: 1px solid rgba(2,6,23,0.06);
+  box-shadow: 0 6px 14px rgba(2,6,23,0.04);
+}
+.sound-btn[aria-pressed="true"] {
+  background: linear-gradient(180deg, rgba(2,43,60,0.12), rgba(2,43,60,0.06));
+  color: #fff;
+  border-color: rgba(2,6,23,0.12);
+}
+
+/* CTA (card-aligned) styled to match charity: water primary action */
+.splash-btn {
+  background: transparent;
+  color: var(--cw-blue);
+  border: 2px solid rgba(0,174,239,0.12);
+  padding: 10px 16px;
+  border-radius: 999px;
+  font-weight:700;
+  box-shadow: none;
+}
+.splash-btn:hover {
+  background: rgba(0,174,239,0.06);
+  transform: translateY(-2px);
+}
+
+/* Make the game-wrap sit nicely inside the card */
+.game-wrap{
+  width:100%;
+  max-width:880px;
+  margin: 8px auto 0;
+  padding: 6px 0;
+}
+
+/* game-field constrained for better visual balance on large screens */
+.game-field{
+  position:relative;
+  width: 100%;
+  max-width: 820px;
+  height: 56vh;
+  min-height:320px;
+  margin: 12px auto;
+
+  /* increased padding so the playable area has breathing room */
+  padding: 18px;
+  display: flex;
+  align-items: center;       /* center grid vertically */
+  justify-content: center;   /* center grid horizontally */
+
+  background: linear-gradient(180deg, rgba(46,157,247,0.04), rgba(46,157,247,0.01));
+  border-radius:12px;
+  overflow:hidden;
+  border: 2px solid rgba(46,157,247,0.08);
+}
+
+/* HUD: give controls a compact layout and keep score/timer visible */
+.hud {
+  display:flex;
+  gap:12px;
+  align-items:center;
+  justify-content:space-between;
+  width:100%;
+  /* make room when controls added */
+}
+
+/* small HUD controls (reset + difficulty select) */
+.hud > div {
+  display:flex;
+  gap:8px;
+  align-items:center;
+}
+
+/* Header / branding */
+.site-header{
+  display:flex;
+  align-items:center;
+  gap:1rem;
+  width:100%;
+  justify-content: center;
+  max-width:980px;
+  box-sizing: border-box;
+  padding: 0 8px;
+}
+.logo{ height:56px; width:auto; display:block; flex-shrink:0; }
+.title-block h1{ margin:0; font-size:1.5rem; color:var(--cw-dark); }
+.tagline{ margin:0; color:#06638b; font-size:0.95rem; }
+
+/* Make the original header visible inside the hero and style it for the yellow banner */
+.banner-hero .site-header .logo {
+  height: 48px;
+  width: auto;
+  display: block;
+}
+
+/* Make the title and tagline readable on the yellow hero */
+.banner-hero .title-block h1 {
+  margin: 0;
+  font-size: 1.2rem;
+  color: #072b3a; /* choose dark for contrast against yellow */
+  font-weight: 800;
+}
+.banner-hero .title-block .tagline {
+  margin: 0;
+  color: rgba(7,43,58,0.9);
+  font-size: 0.95rem;
+}
+
+/* Basic headings */
+h1 { text-align:center; font-size:30px; font-weight:bold; color:var(--cw-blue); margin:0 0 8px 0; }
+
+/* Game field (drop area) */
+.game-field{
+  position:relative;
+  height:60vh;
+  min-height:360px;
+  margin-top:1rem;
+
+  /* increased padding so the playable area has breathing room */
+  padding: 24px;
+  display: flex;
+  align-items: center;       /* center grid vertically */
+  justify-content: center;   /* center grid horizontally */
+
+  background: linear-gradient(180deg, rgba(46,157,247,0.04), rgba(46,157,247,0.01));
+  border-radius:12px;
+  overflow:hidden;
+  border: 2px solid rgba(46,157,247,0.08);
+}
+
+/* Game grid: fixed 3x3 grid for stable gameplay (min cell width, responsive) */
+.game-grid {
+  width: min(720px, 96%);
+  display: grid;
+  grid-template-columns: repeat(3, minmax(120px, 1fr)); /* force 3 columns */
+  gap: clamp(8px, 1.6vw, 16px);
+  margin: 6px auto;
+}
+
+/* Make grid cells consistent squares so touch targets are predictable */
+.grid-cell{
+  position: relative;
+  overflow: visible; /* allow wrappers to pop outside slightly */
+  aspect-ratio: 1 / 1;         /* keep cells square */
+  min-height: 120px;           /* fallback for browsers without aspect-ratio */
+  padding: 8px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  outline: 1px solid rgba(2,6,23,0.04);
+  box-shadow: 0 4px 10px rgba(2,8,20,0.04);
+  cursor:pointer;
+  transition:background-color 0.3s;
+
+  /* Make grid cells easier to tap: breathing room, mobile touch handling */
+  padding: 6px;
+  touch-action: manipulation;
+}
+
+/* HUD sound toggle button */
+.sound-btn {
+  padding: 8px 10px;
+  font-size: 15px;
+  border-radius: 8px;
+  min-width: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(180deg, rgba(2,43,60,0.06), rgba(2,43,60,0.02));
+  color: var(--cw-dark);
+  border: 1px solid rgba(2,6,23,0.06);
+  box-shadow: 0 6px 14px rgba(2,6,23,0.04);
+}
+.sound-btn[aria-pressed="true"] {
+  background: linear-gradient(180deg, rgba(2,43,60,0.12), rgba(2,43,60,0.06));
+  color: #fff;
+  border-color: rgba(2,6,23,0.12);
+}
+
+/* CTA (card-aligned) styled to match charity: water primary action */
+.splash-btn {
+  background: transparent;
+  color: var(--cw-blue);
+  border: 2px solid rgba(0,174,239,0.12);
+  padding: 10px 16px;
+  border-radius: 999px;
+  font-weight:700;
+  box-shadow: none;
+}
+.splash-btn:hover {
+  background: rgba(0,174,239,0.06);
+  transform: translateY(-2px);
+}
+
+/* Make the game-wrap sit nicely inside the card */
+.game-wrap{
+  width:100%;
+  max-width:880px;
+  margin: 8px auto 0;
+  padding: 6px 0;
+}
+
+/* game-field constrained for better visual balance on large screens */
+.game-field{
+  position:relative;
+  width: 100%;
+  max-width: 820px;
+  height: 56vh;
+  min-height:320px;
+  margin: 12px auto;
+
+  /* increased padding so the playable area has breathing room */
+  padding: 18px;
+  display: flex;
+  align-items: center;       /* center grid vertically */
+  justify-content: center;   /* center grid horizontally */
+
+  background: linear-gradient(180deg, rgba(46,157,247,0.04), rgba(46,157,247,0.01));
+  border-radius:12px;
+  overflow:hidden;
+  border: 2px solid rgba(46,157,247,0.08);
+}
+
+/* HUD: give controls a compact layout and keep score/timer visible */
+.hud {
+  display:flex;
+  gap:12px;
+  align-items:center;
+  justify-content:space-between;
+  width:100%;
+  /* make room when controls added */
+}
+
+/* small HUD controls (reset + difficulty select) */
+.hud > div {
+  display:flex;
+  gap:8px;
+  align-items:center;
+}
+
+/* Header / branding */
+.site-header{
+  display:flex;
+  align-items:center;
+  gap:1rem;
+  width:100%;
+  justify-content: center;
+  max-width:980px;
+  box-sizing: border-box;
+  padding: 0 8px;
+}
+.logo{ height:56px; width:auto; display:block; flex-shrink:0; }
+.title-block h1{ margin:0; font-size:1.5rem; color:var(--cw-dark); }
+.tagline{ margin:0; color:#06638b; font-size:0.95rem; }
+
+/* Make the original header visible inside the hero and style it for the yellow banner */
+.banner-hero .site-header .logo {
+  height: 48px;
+  width: auto;
+  display: block;
+}
+
+/* Make the title and tagline readable on the yellow hero */
+.banner-hero .title-block h1 {
+  margin: 0;
+  font-size: 1.2rem;
+  color: #072b3a; /* choose dark for contrast against yellow */
+  font-weight: 800;
+}
+.banner-hero .title-block .tagline {
+  margin: 0;
+  color: rgba(7,43,58,0.9);
+  font-size: 0.95rem;
+}
+
+/* Basic headings */
+h1 { text-align:center; font-size:30px; font-weight:bold; color:var(--cw-blue); margin:0 0 8px 0; }
+
+/* Game field (drop area) */
+.game-field{
+  position:relative;
+  height:60vh;
+  min-height:360px;
+  margin-top:1rem;
+
+  /* increased padding so the playable area has breathing room */
+  padding: 24px;
+  display: flex;
+  align-items: center;       /* center grid vertically */
+  justify-content: center;   /* center grid horizontally */
+
+  background: linear-gradient(180deg, rgba(46,157,247,0.04), rgba(46,157,247,0.01));
+  border-radius:12px;
+  overflow:hidden;
+  border: 2px solid rgba(46,157,247,0.08);
+}
+
+/* Game grid: fixed 3x3 grid for stable gameplay (min cell width, responsive) */
+.game-grid {
+  width: min(720px, 96%);
+  display: grid;
+  grid-template-columns: repeat(3, minmax(120px, 1fr)); /* force 3 columns */
+  gap: clamp(8px, 1.6vw, 16px);
+  margin: 6px auto;
+}
+
+/* Make grid cells consistent squares so touch targets are predictable */
+.grid-cell{
+  position: relative;
+  overflow: visible; /* allow wrappers to pop outside slightly */
+  aspect-ratio: 1 / 1;         /* keep cells square */
+  min-height: 120px;           /* fallback for browsers without aspect-ratio */
+  padding: 8px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  outline: 1px solid rgba(2,6,23,0.04);
+  box-shadow: 0 4px 10px rgba(2,8,20,0.04);
+  cursor:pointer;
+  transition:background-color 0.3s;
+
+  /* Make grid cells easier to tap: breathing room, mobile touch handling */
+  padding: 6px;
+  touch-action: manipulation;
+}
+
+/* HUD sound toggle button */
+.sound-btn {
+  padding: 8px 10px;
+  font-size: 15px;
+  border-radius: 8px;
+  min-width: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(180deg, rgba(2,43,60,0.06), rgba(2,43,60,0.02));
+  color: var(--cw-dark);
+  border: 1px solid rgba(2,6,23,0.06);
+  box-shadow: 0 6px 14px rgba(2,6,23,0.04);
+}
+.sound-btn[aria-pressed="true"] {
+  background: linear-gradient(180deg, rgba(2,43,60,0.12), rgba(2,43,60,0.06));
+  color: #fff;
+  border-color: rgba(2,6,23,0.12);
+}
+
+/* CTA (card-aligned) styled to match charity: water primary action */
+.splash-btn {
+  background: transparent;
+  color: var(--cw-blue);
+  border: 2px solid rgba(0,174,239,0.12);
+  padding: 10px 16px;
+  border-radius: 999px;
+  font-weight:700;
+  box-shadow: none;
+}
+.splash-btn:hover {
+  background: rgba(0,174,239,0.06);
+  transform: translateY(-2px);
+}
+
+/* Make the game-wrap sit nicely inside the card */
+.game-wrap{
+  width:100%;
+  max-width:880px;
+  margin: 8px auto 0;
+  padding: 6px 0;
+}
+
+/* game-field constrained for better visual balance on large screens */
+.game-field{
+  position:relative;
+  width: 100%;
+  max-width: 820px;
+  height: 56vh;
+  min-height:320px;
+  margin: 12px auto;
+
+  /* increased padding so the playable area has breathing room */
+  padding: 18px;
+  display: flex;
+  align-items: center;       /* center grid vertically */
+  justify-content: center;   /* center grid horizontally */
+
+  background: linear-gradient(180deg, rgba(46,157,247,0.04), rgba(46,157,247,0.01));
+  border-radius:12px;
+  overflow:hidden;
+  border: 2px solid rgba(46,157,247,0.08);
+}
+
+/* HUD: give controls a compact layout and keep score/timer visible */
+.hud {
+  display:flex;
+  gap:12px;
+  align-items:center;
+  justify-content:space-between;
+  width:100%;
+  /* make room when controls added */
+}
+
+/* small HUD controls (reset + difficulty select) */
+.hud > div {
+  display:flex;
+  gap:8px;
+  align-items:center;
+}
+
+/* Header / branding */
+.site-header{
+  display:flex;
+  align-items:center;
+  gap:1rem;
+  width:100%;
+  justify-content: center;
+  max-width:980px;
+  box-sizing: border-box;
+  padding: 0 8px;
+}
+.logo{ height:56px; width:auto; display:block; flex-shrink:0; }
+.title-block h1{ margin:0; font-size:1.5rem; color:var(--cw-dark); }
+.tagline{ margin:0; color:#06638b; font-size:0.95rem; }
+
+/* Make the original header visible inside the hero and style it for the yellow banner */
+.banner-hero .site-header .logo {
+  height: 48px;
+  width: auto;
+  display: block;
+}
+
+/* Make the title and tagline readable on the yellow hero */
+.banner-hero .title-block h1 {
+  margin: 0;
+  font-size: 1.2rem;
+  color: #072b3a; /* choose dark for contrast against yellow */
+  font-weight: 800;
+}
+.banner-hero .title-block .tagline {
+  margin: 0;
+  color: rgba(7,43,58,0.9);
+  font-size: 0.95rem;
+}
+
+/* Basic headings */
+h1 { text-align:center; font-size:30px; font-weight:bold; color:var(--cw-blue); margin:0 0 8px 0; }
+
+/* Game field (drop area) */
+.game-field{
+  position:relative;
+  height:60vh;
+  min-height:360px;
+  margin-top:1rem;
+
+  /* increased padding so the playable area has breathing room */
+  padding: 24px;
+  display: flex;
+  align-items: center;       /* center grid vertically */
+  justify-content: center;   /* center grid horizontally */
+
+  background: linear-gradient(180deg, rgba(46,157,247,0.04), rgba(46,157,247,0.01));
+  border-radius:12px;
+  overflow:hidden;
+  border: 2px solid rgba(46,157,247,0.08);
+}
+
+/* Game grid: fixed 3x3 grid for stable gameplay (min cell width, responsive) */
+.game-grid {
+  width: min(720px, 96%);
+  display: grid;
+  grid-template-columns: repeat(3, minmax(120px, 1fr)); /* force 3 columns */
+  gap: clamp(8px, 1.6vw, 16px);
+  margin: 6px auto;
+}
+
+/* Make grid cells consistent squares so touch targets are predictable */
+.grid-cell{
+  position: relative;
+  overflow: visible; /* allow wrappers to pop outside slightly */
+  aspect-ratio: 1 / 1;         /* keep cells square */
+  min-height: 120px;           /* fallback for browsers without aspect-ratio */
+  padding: 8px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  outline: 1px solid rgba(2,6,23,0.04);
+  box-shadow: 0 4px 10px rgba(2,8,20,0.04);
+  cursor:pointer;
+  transition:background-color 0.3s;
+
+  /* Make grid cells easier to tap: breathing room, mobile touch handling */
+  padding: 6px;
+  touch-action: manipulation;
+}
+
+/* HUD sound toggle button */
+.sound-btn {
+  padding: 8px 10px;
+  font-size: 15px;
+  border-radius: 8px;
+  min-width: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(180deg, rgba(2,43,60,0.06), rgba(2,43,60,0.02));
+  color: var(--cw-dark);
+  border: 1px solid rgba(2,6,23,0.06);
+  box-shadow: 0 6px 14px rgba(2,6,23,0.04);
+}
+.sound-btn[aria-pressed="true"] {
+  background: linear-gradient(180deg, rgba(2,43,60,0.12), rgba(2,43,60,0.06));
+  color: #fff;
+  border-color: rgba(2,6,23,0.12);
+}
+
+/* CTA (card-aligned) styled to match charity: water primary action */
+.splash-btn {
+  background: transparent;
+  color: var(--cw-blue);
+  border: 2px solid rgba(0,174,239,0.12);
+  padding: 10px 16px;
+  border-radius: 999px;
+  font-weight:700;
+  box-shadow: none;
+}
+.splash-btn:hover {
+  background: rgba(0,174,239,0.06);
+  transform: translateY(-2px);
+}
+
+/* Make the game-wrap sit nicely inside the card */
+.game-wrap{
+  width:100%;
+  max-width:880px;
+  margin: 8px auto 0;
+  padding: 6px 0;
+}
+
+/* game-field constrained for better visual balance on large screens */
+.game-field{
+  position:relative;
+  width: 100%;
+  max-width: 820px;
+  height: 56vh;
+  min-height:320px;
+  margin: 12px auto;
+
+  /* increased padding so the playable area has breathing room */
+  padding: 18px;
+  display: flex;
+  align-items: center;       /* center grid vertically */
+  justify-content: center;   /* center grid horizontally */
+
+  background: linear-gradient(180deg, rgba(46,157,247,0.04), rgba(46,157,247,0.01));
+  border-radius:12px;
+  overflow:hidden;
+  border: 2px solid rgba(46,157,247,0.08);
+}
+
+/* HUD: give controls a compact layout and keep score/timer visible */
+.hud {
+  display:flex;
+  gap:12px;
+  align-items:center;
+  justify-content:space-between;
+  width:100%;
+  /* make room when controls added */
+}
+
+/* small HUD controls (reset + difficulty select) */
+.hud > div {
+  display:flex;
+  gap:8px;
+  align-items:center;
+}
+
+/* Header / branding */
+.site-header{
+  display:flex;
+  align-items:center;
+  gap:1rem;
+  width:100%;
+  justify-content: center;
+  max-width:980px;
+  box-sizing: border-box;
+  padding: 0 8px;
+}
+.logo{ height:56px; width:auto; display:block; flex-shrink:0; }
+.title-block h1{ margin:0; font-size:1.5rem; color:var(--cw-dark); }
+.tagline{ margin:0; color:#06638b; font-size:0.95rem; }
+
+/* Make the original header visible inside the hero and style it for the yellow banner */
+.banner-hero .site-header .logo {
+  height: 48px;
+  width: auto;
+  display: block;
+}
+
+/* Make the title and tagline readable on the yellow hero */
+.banner-hero .title-block h1 {
+  margin: 0;
+  font-size: 1.2rem;
+  color: #072b3a; /* choose dark for contrast against yellow */
+  font-weight: 800;
+}
+.banner-hero .title-block .tagline {
+  margin: 0;
+  color: rgba(7,43,58,0.9);
+  font-size: 0.95rem;
+}
+
+/* Basic headings */
+h1 { text-align:center; font-size:30px; font-weight:bold; color:var(--cw-blue); margin:0 0 8px 0; }
+
+/* Game field (drop area) */
+.game-field{
+  position:relative;
+  height:60vh;
+  min-height:360px;
+  margin-top:1rem;
+
+  /* increased padding so the playable area has breathing room */
+  padding: 24px;
+  display: flex;
+  align-items: center;       /* center grid vertically */
+  justify-content: center;   /* center grid horizontally */
+
+  background: linear-gradient(180deg, rgba(46,157,247,0.04), rgba(46,157,247,0.01));
+  border-radius:12px;
+  overflow:hidden;
+  border: 2px solid rgba(46,157,247,0.08);
+}
+
+/* Game grid: fixed 3x3 grid for stable gameplay (min cell width, responsive) */
+.game-grid {
+  width: min(720px, 96%);
+  display: grid;
+  grid-template-columns: repeat(3, minmax(120px, 1fr)); /* force 3 columns */
+  gap: clamp(8px, 1.6vw, 16px);
+  margin: 6px auto;
+}
+
+/* Make grid cells consistent squares so touch targets are predictable */
+.grid-cell{
+  position: relative;
+  overflow: visible; /* allow wrappers to pop outside slightly */
+  aspect-ratio: 1 / 1;         /* keep cells square */
+  min-height: 120px;           /* fallback for browsers without aspect-ratio */
+  padding: 8px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  outline: 1px solid rgba(2,6,23,0.04);
+  box-shadow: 0 4px 10px rgba(2,8,20,0.04);
+  cursor:pointer;
+  transition:background-color 0.3s;
+
+  /* Make grid cells easier to tap: breathing room, mobile touch handling */
+  padding: 6px;
+  touch-action: manipulation;
+}
+
+/* HUD sound toggle button */
+.sound-btn {
+  padding: 8px 10px;
+  font-size: 15px;
+  border-radius: 8px;
+  min-width: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(180deg, rgba(2,43,60,0.06), rgba(2,43,60,0.02));
+  color: var(--cw-dark);
+  border: 1px solid rgba(2,6,23,0.06);
+  box-shadow: 0 6px 14px rgba(2,6,23,0.04);
+}
+.sound-btn[aria-pressed="true"] {
+  background: linear-gradient(180deg, rgba(2,43,60,0.12), rgba(2,43,60,0.06));
+  color: #fff;
+  border-color: rgba(2,6,23,0.12);
+}
+
+/* CTA (card-aligned) styled to match charity: water primary action */
+.splash-btn {
+  background: transparent;
+  color: var(--cw-blue);
+  border: 2px solid rgba(0,174,239,0.12);
+  padding: 10px 16px;
+  border-radius: 999px;
+  font-weight:700;
+  box-shadow: none;
+}
+.splash-btn:hover {
+  background: rgba(0,174,239,0.06);
+  transform: translateY(-2px);
+}
+
+/* Make the game-wrap sit nicely inside the card */
+.game-wrap{
+  width:100%;
+  max-width:880px;
+  margin: 8px auto 0;
+  padding: 6px 0;
+}
+
+/* game-field constrained for better visual balance on large screens */
+.game-field{
+  position:relative;
+  width: 100%;
+  max-width: 820px;
+  height: 56vh;
+  min-height:320px;
+  margin: 12px auto;
+
+  /* increased padding so the playable area has breathing room */
+  padding: 18px;
+  display: flex;
+  align-items: center;       /* center grid vertically */
+  justify-content: center;   /* center grid horizontally */
+
+  background: linear-gradient(180deg, rgba(46,157,247,0.04), rgba(46,157,247,0.01));
+  border-radius:12px;
+  overflow:hidden;
+  border: 2px solid rgba(46,157,247,0.08);
+}
+
+/* HUD: give controls a compact layout and keep score/timer visible */
+.hud {
+  display:flex;
+  gap:12px;
+  align-items:center;
+  justify-content:space-between;
+  width:100%;
+  /* make room when controls added */
+}
+
+/* small HUD controls (reset + difficulty select) */
+.hud > div {
+  display:flex;
+  gap:8px;
+  align-items:center;
+}
+
+/* Header / branding */
+.site-header{
+  display:flex;
+  align-items:center;
+  gap:1rem;
+  width:100%;
+  justify-content: center;
+  max-width:980px;
+  box-sizing: border-box;
+  padding: 0 8px;
+}
+.logo{ height:56px; width:auto; display:block; flex-shrink:0; }
+.title-block h1{ margin:0; font-size:1.5rem; color:var(--cw-dark); }
+.tagline{ margin:0; color:#06638b; font-size:0.95rem; }
+
+/* Make the original header visible inside the hero and style it for the yellow banner */
+.banner-hero .site-header .logo {
+  height: 48px;
