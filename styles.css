@@ -202,13 +202,34 @@ h1 { text-align:center; font-size:30px; font-weight:bold; color:var(--cw-blue); 
   border: 2px solid rgba(46,157,247,0.08);
 }
 
-/* Game grid: use auto-fit so columns adapt to viewport and small screens */
+/* Game grid: fixed 3x3 grid for stable gameplay (min cell width, responsive) */
 .game-grid {
   width: min(720px, 96%);
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  grid-template-columns: repeat(3, minmax(120px, 1fr)); /* force 3 columns */
   gap: clamp(8px, 1.6vw, 16px);
   margin: 6px auto;
+}
+
+/* Make grid cells consistent squares so touch targets are predictable */
+.grid-cell{
+  position: relative;
+  overflow: visible; /* allow wrappers to pop outside slightly */
+  aspect-ratio: 1 / 1;         /* keep cells square */
+  min-height: 120px;           /* fallback for browsers without aspect-ratio */
+  padding: 8px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  outline: 1px solid rgba(2,6,23,0.04);
+  box-shadow: 0 4px 10px rgba(2,8,20,0.04);
+  cursor:pointer;
+  transition:background-color 0.3s;
+
+  /* Make grid cells easier to tap: increase min-height and center content */
+  padding: 6px;            /* breathing room */
+  touch-action: manipulation; /* improve mobile tap handling */
 }
 
 /* Ensure water-can is touch-friendly and doesn't block touch actions */
@@ -231,32 +252,6 @@ h1 { text-align:center; font-size:30px; font-weight:bold; color:var(--cw-blue); 
   .grid-cell { min-height: 92px; }
   .grid-cell .water-can { width: 44px; height: 44px; }
 }
-
-/* Make grid cells responsive in height and touch-friendly */
-.grid-cell{
-  position: relative;
-  overflow: visible; /* allow wrappers to pop outside slightly */
-  min-height: clamp(88px, 20vh, 160px);
-  padding: 8px;
-  border-radius: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  outline: 1px solid rgba(2,6,23,0.04);
-  box-shadow: 0 4px 10px rgba(2,8,20,0.04);
-  cursor:pointer;
-  transition:background-color 0.3s;
-
-  /* Make grid cells easier to tap: increase min-height and center content */
-  min-height: 128px;
-  padding: 6px;            /* breathing room */
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-/* Ensure grid cells are positioned for absolute wrappers (already set, keep) */
-.grid-cell { position: relative; overflow: hidden; }
 
 /* Centered pop wrapper: start below the card and animate to exact center */
 .grid-cell .water-can-wrapper{

@@ -919,5 +919,27 @@ document.addEventListener('keydown', (e) => {
   }
 });
 
+// --- initialization: preload sounds + wire HUD sound toggle ---
+(function _initUI() {
+  // start loading audio assets (defensive)
+  try { preloadSounds(); } catch (_) { /* ignore */ }
+
+  // wire the HUD sound toggle (button exists in index.html)
+  try {
+    const soundToggleBtn = document.getElementById('soundToggle');
+    if (soundToggleBtn) {
+      // aria-pressed = true when muted (keeps previous convention)
+      soundToggleBtn.setAttribute('aria-pressed', String(!soundEnabled));
+      soundToggleBtn.textContent = soundEnabled ? '🔊' : '🔈';
+      soundToggleBtn.addEventListener('click', (e) => {
+        e?.preventDefault();
+        soundEnabled = !soundEnabled;
+        soundToggleBtn.setAttribute('aria-pressed', String(!soundEnabled));
+        soundToggleBtn.textContent = soundEnabled ? '🔊' : '🔈';
+      });
+    }
+  } catch (_) { /* ignore UI wiring failures */ }
+})();
+
 // Ensure initial HUD reflects defaults
 updateHUD();
