@@ -920,8 +920,41 @@ document.addEventListener('keydown', (e) => {
         soundToggleBtn.textContent = soundEnabled ? '🔊' : '🔈';
       });
     }
+
+    // accessibility: move programmatic focus to the Play button so keyboard users can start quickly
+    try {
+      if (bannerPlayEl && typeof bannerPlayEl.focus === 'function') {
+        bannerPlayEl.setAttribute('aria-label', bannerPlayEl.getAttribute('aria-label') || 'Play Water Quest');
+        bannerPlayEl.focus();
+      }
+    } catch (_) { /* ignore focus errors */ }
+
   } catch (_) { /* ignore UI wiring failures */ }
 })();
+
+// Cleanup timers and background work when the page is unloaded/hidden.
+// This prevents timers from running after navigating away and stops audio/confetti.
+window.addEventListener('pagehide', () => {
+  try {
+    clearTimeout(popTimer); popTimer = null;
+    clearInterval(countdownTimer); countdownTimer = null;
+    if (bannerAutoHideTimer) { clearTimeout(bannerAutoHideTimer); bannerAutoHideTimer = null; }
+    stopConfetti();
+  } catch (_) { /* ignore */ }
+});
+
+// ensure beforeunload also clears timers in addition to saving state
+window.addEventListener('beforeunload', (e) => {
+  try {
+    // save state (existing function) — keep original behavior
+    saveState();
+    // clear timers to avoid any lingering work (defensive)
+    clearTimeout(popTimer); popTimer = null;
+    clearInterval(countdownTimer); countdownTimer = null;
+    if (bannerAutoHideTimer) { clearTimeout(bannerAutoHideTimer); bannerAutoHideTimer = null; }
+    try { stopConfetti(); } catch (_) {}
+  } catch (_) { /* ignore */ }
+});
 
 // Ensure initial HUD reflects defaults
 updateHUD();
