@@ -259,6 +259,80 @@ function startGame() {
 	}
 }
 
+// --- Input handling and shared tap logic ---
+// add shared tap handler and delegated listeners so cans respond to clicks/touches/keyboard
+function handleCanTap(can) {
+  if (!can) return;
+  // prevent double-tap
+  if (can.classList.contains('tapped')) return;
+  can.classList.add('tapped');
+
+  // visual tap effect
+  can.classList.add('tap-effect');
+
+  const wrapper = can.parentElement;
+  const cell = wrapper?.parentElement;
+  const isBad = can.dataset.bad === '1' || can.classList.contains('obstacle');
+
+  if (isBad) {
+    can.classList.add('silhouette', 'shake');
+    setTimeout(() => { can.classList.remove('shake'); }, 420);
+
+    setTimeout(() => {
+      if (cell) cell.classList.remove('pop');
+      if (cell && cell.classList.contains('obstacle-present')) cell.classList.remove('obstacle-present');
+      if (wrapper) wrapper.remove();
+    }, 220);
+
+    score = Math.max(0, score - BAD_PENALTY);
+    showAchievement(`-${BAD_PENALTY} (dirty can)`);
+    if (window.Assets && typeof Assets.playSound === 'function') Assets.playSound('bad');
+  } else {
+    setTimeout(() => {
+      if (cell) cell.classList.remove('pop');
+      if (wrapper) wrapper.remove();
+    }, 120);
+
+    score += 1;
+    peakScore = Math.max(peakScore, score);
+
+    // milestone logic (ordered)
+    let milestoneShown = false;
+    for (const m of MILESTONES) {
+      if (score >= m.score && !shownMilestones.has(m.score)) {
+        shownMilestones.add(m.score);
+        showAchievement(m.msg);
+        milestoneShown = true;
+        break;
+      }
+    }
+    if (!milestoneShown) showAchievement('+1');
+    if (window.Assets && typeof Assets.playSound === 'function') Assets.playSound('pop');
+  }
+
+  updateHUD();
+}
+
+// delegated handlers for the grid (pointer + keyboard)
+if (gridEl) {
+  gridEl.addEventListener('pointerdown', (e) => {
+    const can = e.target.closest && e.target.closest('.water-can');
+    if (!can || !gridEl.contains(can)) return;
+    handleCanTap(can);
+  });
+
+  gridEl.addEventListener('keydown', (e) => {
+    if (e.code !== 'Enter' && e.code !== 'Space') return;
+    const focused = document.activeElement;
+    if (!focused || !focused.classList || !focused.classList.contains('grid-cell')) return;
+    const can = focused.querySelector('.water-can');
+    if (!can) return;
+    e.preventDefault();
+    handleCanTap(can);
+  });
+}
+
+// --- initEvents() wiring changes: re-add replay button wiring ---
 function initEvents() {
   // replay / end-panel controls
   const closeEndBtn = document.getElementById('closeEndBtn');
@@ -270,6 +344,14 @@ function initEvents() {
   // banner handlers
   bannerPlayEl?.addEventListener('click', (e) => { e?.preventDefault(); hideBanner(); startGame(); });
   bannerCloseEl?.addEventListener('click', (e) => { e?.preventDefault(); if (bannerWrapEl) bannerWrapEl.classList.add('hidden'); });
+
+  // replay / end-panel controls (Play again)
+  const replayBtn = document.getElementById('replayBtn');
+  replayBtn?.addEventListener('click', () => {
+    overlayHide();
+    hideBanner();
+    setTimeout(startGame, 140);
+  });
 
   // reset and difficulty select
   const resetBtn = document.getElementById('resetBtn');
