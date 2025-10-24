@@ -129,13 +129,13 @@ function createCan(isBad) {
 	can.setAttribute('aria-label', isBad ? 'Dirty jerry can — avoid' : 'Clean jerry can');
 	can.tabIndex = 0;
 
-	// Use inlined data URIs to avoid network 404s. This always displays the intended visuals
+	// Use centralized Assets URIs (fallback to empty string if module not available)
 	if (isBad) {
-		can.style.backgroundImage = `url("${DIRTY_CAN_URI}")`;
+		can.style.backgroundImage = `url("${(window.Assets && Assets.DIRTY_CAN_URI) || ''}")`;
 		can.innerHTML = '';
 		can.classList.add('obstacle');
 	} else {
-		can.style.backgroundImage = `url("${WATER_CAN_URI}")`;
+		can.style.backgroundImage = `url("${(window.Assets && Assets.WATER_CAN_URI) || ''}")`;
 		can.innerHTML = '';
 	}
 
@@ -238,7 +238,7 @@ function startGame() {
 		shownMilestones.clear();
 
 		// play start sound
-		playSound('start');
+		if (window.Assets && typeof Assets.playSound === 'function') Assets.playSound('start');
 
 		// hide overlays/banners using centralized helpers so timers/inert states are handled
 		if (overlay) overlay.classList.add('hidden');
@@ -279,7 +279,7 @@ function endGame() {
 	if (resultMessage) resultMessage.textContent = msg;
 
 	// play win sound for winners (non-blocking)
-	if (isWin) playSound('win');
+	if (isWin && window.Assets && typeof Assets.playSound === 'function') Assets.playSound('win');
 
 	// show overlay end panel via helper (endPanel exists in DOM)
 	const endPanelEl = document.getElementById('endPanel');
@@ -434,6 +434,8 @@ const _DIRTY_CAN_SVG = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 
 const DIRTY_CAN_URI = 'data:image/svg+xml;utf8,' + encodeURIComponent(_DIRTY_CAN_SVG);
 */
 
+// --- remove in-file SOUND_FILES / preloadSounds / playSound / SVG URIs ---
+
 // sound assets (place audio files in /workspaces/05-cw-game-water-quest/sound)
 const SOUND_FILES = {
   pop:  'sound/pop.mp3',
@@ -559,7 +561,7 @@ function handleCanTap(can) {
 
 		score = Math.max(0, score - BAD_PENALTY);
 		showAchievement(`-${BAD_PENALTY} (dirty can)`);
-		playSound('bad');
+		if (window.Assets && typeof Assets.playSound === 'function') Assets.playSound('bad');
 	} else {
 		setTimeout(() => {
 			if (cell) cell.classList.remove('pop');
@@ -582,7 +584,7 @@ function handleCanTap(can) {
 		if (!milestoneShown) {
 			showAchievement('+1');
 		}
-		playSound('pop');
+		if (window.Assets && typeof Assets.playSound === 'function') Assets.playSound('pop');
 	}
 
 	updateHUD();
@@ -609,288 +611,56 @@ if (gridEl) {
 }
 
 // --- UI wiring (replay, reset, difficulty) ---
-const closeEndBtn = document.getElementById('closeEndBtn');
-
-replayBtn?.addEventListener('click', () => {
-	overlayHide();
-	hideBanner();
-	setTimeout(startGame, 140);
-});
-
-// allow closing end panel without replay
-closeEndBtn?.addEventListener('click', (e) => {
-  e?.preventDefault();
-  overlayHide();
-});
-
-// keyboard: Space to start when not running
-document.addEventListener('keydown', (e) => {
-	if (e.code === 'Space' && !running) {
-		e.preventDefault();
-		hideBanner();
-		startGame();
-	}
-});
-
-// banner PLAY handlers (kept simple)
-bannerPlayEl?.addEventListener('click', (e) => {
-	e?.preventDefault();
-	hideBanner();
-	startGame();
-});
-
-// remove topBannerEl click handler (no longer needed)
-
-// banner close logic: keep; just hide the wrapper
-bannerCloseEl?.addEventListener('click', (e) => {
-  e?.preventDefault();
-  if (bannerWrapEl) bannerWrapEl.classList.add('hidden');
-});
-
-// wire reset button and difficulty selector (listeners added once)
-const resetBtn = document.getElementById('resetBtn');
-const difficultySelect = document.getElementById('difficultySelect');
-
-// When Reset is clicked refresh the page so the UI returns to the initial loaded state
-resetBtn?.addEventListener('click', () => {
-	// clear any timers/state first for cleanliness then reload
-	try { stopConfetti(); } catch (_) {}
-	try { clearTimeout(popTimer); popTimer = null; } catch (_) {}
-	try { clearInterval(countdownTimer); countdownTimer = null; } catch (_) {}
-	location.reload();
-});
-
-difficultySelect?.addEventListener('change', (e) => {
-	const val = (e.target && e.target.value) || 'normal';
-	setDifficulty(val);
-	// if running, restart spawn loop with new timings to apply immediately
-	if (running) {
-		clearTimeout(popTimer);
-		popTimer = null;
-		scheduleNextPop();
-	}
-});
-
-// --- inert fallback + modal helpers: focus trap, aria-hide and show/hide overlay panels ---
-let _focusTrapListener = null;
-let _previouslyFocused = null;
-let _wasRunningBeforeModal = false;
-const _appRegions = () => document.querySelectorAll('.brand-strip, .banner-wrapper, .game-wrap, .hud');
-
-// helper: apply inert to container (fallback: make focusable descendants tabindex=-1)
-function _applyInert(el, inert) {
-  try {
-    if ('inert' in el) {
-      el.inert = inert;
-      return;
-    }
-  } catch (_) {}
-  // fallback: toggle aria-hidden and manage tabindex for focusable descendants
-  if (inert) el.setAttribute('aria-hidden', 'true');
-  else el.removeAttribute('aria-hidden');
-
-  const focusableSelector = 'a[href], button:not([disabled]), textarea, input, select, [tabindex]';
-  const focusables = Array.from(el.querySelectorAll(focusableSelector));
-  focusables.forEach(node => {
-    if (inert) {
-      // store previous tabIndex
-      if (!node.hasAttribute('data-prev-tabindex')) node.setAttribute('data-prev-tabindex', node.getAttribute('tabindex') ?? '');
-      node.setAttribute('tabindex', '-1');
-    } else {
-      // restore
-      if (node.hasAttribute('data-prev-tabindex')) {
-        const prev = node.getAttribute('data-prev-tabindex');
-        if (prev === '') node.removeAttribute('tabindex');
-        else node.setAttribute('tabindex', prev);
-        node.removeAttribute('data-prev-tabindex');
-      } else {
-        node.removeAttribute('tabindex');
-      }
-    }
-  });
-}
-
-function _getFocusable(container) {
-  return Array.from(container.querySelectorAll('a[href], button:not([disabled]), textarea, input, select, [tabindex]:not([tabindex="-1"])'))
-    .filter(el => el.offsetParent !== null);
-}
-
-function _trapFocus(container) {
-  const focusables = _getFocusable(container);
-  if (!focusables.length) return;
-  const first = focusables[0];
-  const last = focusables[focusables.length - 1];
-  // focus the first element
-  first.focus();
-
-  _focusTrapListener = (e) => {
-    if (e.key !== 'Tab') return;
-    if (e.shiftKey) {
-      if (document.activeElement === first) {
-        e.preventDefault();
-        last.focus();
-      }
-    } else {
-      if (document.activeElement === last) {
-        e.preventDefault();
-        first.focus();
-      }
-    }
-  };
-  document.addEventListener('keydown', _focusTrapListener);
-}
-
-function _releaseFocusTrap() {
-  if (_focusTrapListener) {
-    document.removeEventListener('keydown', _focusTrapListener);
-    _focusTrapListener = null;
-  }
-}
-
-// pause game (preserve timeLeft & score) and clear timers
-function _pauseGameForModal() {
-  _wasRunningBeforeModal = running;
-  if (!running) return;
-  clearTimeout(popTimer); popTimer = null;
-  clearInterval(countdownTimer); countdownTimer = null;
-  running = false;
-}
-
-// resume game if it was running when modal opened
-function _resumeGameFromModal() {
-  if (!_wasRunningBeforeModal) return;
-  running = true;
-  // restart countdown and spawn scheduling without resetting the remaining time
-  startCountdown(false);
-  scheduleNextPop();
-  _wasRunningBeforeModal = false;
-}
-
-function overlayShow(panelEl) {
-  if (!overlay || !panelEl) return;
-  // save focus
-  _previouslyFocused = document.activeElement instanceof HTMLElement ? document.activeElement : null;
-
-  // show overlay and target panel first so it is focusable/visible
-  overlay.classList.remove('hidden');
-  overlay.setAttribute('aria-hidden', 'false');
-
-  // hide other overlay panels and reveal the requested panel
-  Array.from(overlay.querySelectorAll('.overlay-content')).forEach(p => p.classList.add('hidden'));
-  panelEl.classList.remove('hidden');
-  panelEl.removeAttribute('aria-hidden');
-
-  // trap focus inside the panel immediately (moves focus into the modal)
-  _trapFocus(panelEl);
-
-  // move programmatic focus to a prominent action (first button) so close works reliably
-  try {
-    const firstButton = panelEl.querySelector('button, [role="button"], [tabindex]:not([tabindex="-1"])');
-    if (firstButton && typeof firstButton.focus === 'function') firstButton.focus();
-  } catch (_) { /* ignore */ }
-
-  // pause game while modal visible
-  _pauseGameForModal();
-
-  // mark app regions as inert (use fallback) AFTER focus moved into modal
-  _appRegions().forEach(el => {
-    try { _applyInert(el, true); } catch(_) {}
-  });
-}
-
-// small helper to verify an element is in the document and visible
-function _isVisible(el) {
-  if (!el || !(el instanceof Element)) return false;
-  try {
-    const style = window.getComputedStyle(el);
-    if (style.visibility === 'hidden' || style.display === 'none' || el.hasAttribute('hidden')) return false;
-    const rect = el.getBoundingClientRect();
-    return rect.width > 0 && rect.height > 0;
-  } catch (e) {
-    return false;
-  }
-}
-
-// Replace overlayHide with a safe, syntactically-correct implementation
-function overlayHide() {
-  if (!overlay) return;
-
-  // release focus trap first (stop intercepting Tab)
-  _releaseFocusTrap();
-
-  // attempt to restore previous focus if possible
-  if (_previouslyFocused) {
-    try {
-      if (document.contains(_previouslyFocused) && _isVisible(_previouslyFocused)) {
-        _previouslyFocused.focus();
-      } else {
-        // fallback targets (in order): bannerPlay, reset button, first .start-btn, then body
-        const fallback = document.getElementById('bannerPlay')
-                       || document.getElementById('resetBtn')
-                       || document.querySelector('.start-btn')
-                       || document.body;
-        if (fallback && typeof fallback.focus === 'function') {
-          try { fallback.focus(); } catch (_) { /* ignore */ }
-        } else {
-          try {
-            if (document.body && typeof document.body.focus === 'function') document.body.focus();
-            else if (document.documentElement && typeof document.documentElement.focus === 'function') document.documentElement.focus();
-          } catch (_) { /* ignore */ }
-        }
-      }
-    } catch (_) {
-      try { if (document.body && typeof document.body.focus === 'function') document.body.focus(); } catch (_) { /* ignore */ }
-    }
-    _previouslyFocused = null;
-  } else {
-    // no previously focused element recorded — blur any focused element inside the overlay so aria-hidden can be applied safely
-    try {
-      const active = document.activeElement;
-      if (overlay.contains(active) && active instanceof HTMLElement) active.blur();
-    } catch (_) { /* ignore */ }
-  }
-
-  // now hide overlay and panels, set ARIA
-  overlay.classList.add('hidden');
-  overlay.setAttribute('aria-hidden', 'true');
-  Array.from(overlay.querySelectorAll('.overlay-content')).forEach(p => {
-    p.classList.add('hidden');
-    p.setAttribute('aria-hidden', 'true');
-  });
-
-  // release inert/aria-hidden on app regions (fallback)
-  _appRegions().forEach(el => {
-    try { _applyInert(el, false); } catch(_) { /* ignore */ }
-  });
-
-  // resume game if it was paused by modal
-  _resumeGameFromModal();
-}
-
-// allow clicking outside the modal panel (on the overlay backdrop) to close it
-overlay?.addEventListener('pointerdown', (e) => {
-  if (e.target === overlay) overlayHide();
-});
-
-// allow Escape to close any open overlay panel
-document.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape' && overlay && !overlay.classList.contains('hidden')) {
+function initEvents() {
+  // replay / end-panel controls
+  const replayBtnEl = document.getElementById('replayBtn');
+  const closeEndBtn = document.getElementById('closeEndBtn');
+  replayBtnEl?.addEventListener('click', () => {
     overlayHide();
-  }
-});
+    hideBanner();
+    setTimeout(startGame, 140);
+  });
+  closeEndBtn?.addEventListener('click', (e) => { e?.preventDefault(); overlayHide(); });
 
-// allow Escape to dismiss banner when visible (does not affect overlay handling)
-document.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape') {
-    try {
-      if (bannerWrapEl && !bannerWrapEl.classList.contains('hidden')) {
-        hideBanner();
-        return;
-      }
-    } catch (_) { /* ignore */ }
-    // existing overlay Escape handler remains elsewhere — no change needed
-  }
-});
+  // keyboard: Space to start when not running
+  document.addEventListener('keydown', (e) => {
+    if (e.code === 'Space' && !running) {
+      e.preventDefault();
+      hideBanner();
+      startGame();
+    }
+  });
+
+  // banner handlers
+  bannerPlayEl?.addEventListener('click', (e) => { e?.preventDefault(); hideBanner(); startGame(); });
+  bannerCloseEl?.addEventListener('click', (e) => { e?.preventDefault(); if (bannerWrapEl) bannerWrapEl.classList.add('hidden'); });
+
+  // reset and difficulty select
+  const resetBtn = document.getElementById('resetBtn');
+  const difficultySelect = document.getElementById('difficultySelect');
+  resetBtn?.addEventListener('click', () => {
+    try { stopConfetti(); } catch (_) {}
+    try { clearTimeout(popTimer); popTimer = null; } catch (_) {}
+    try { clearInterval(countdownTimer); countdownTimer = null; } catch (_) {}
+    location.reload();
+  });
+  difficultySelect?.addEventListener('change', (e) => {
+    const val = (e.target && e.target.value) || 'normal';
+    setDifficulty(val);
+    if (running) { clearTimeout(popTimer); popTimer = null; scheduleNextPop(); }
+  });
+
+  // overlay backdrop click to close
+  overlay?.addEventListener('pointerdown', (e) => { if (e.target === overlay) overlayHide(); });
+
+  // Escape handlers: close overlay or dismiss banner
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      if (overlay && !overlay.classList.contains('hidden')) { overlayHide(); return; }
+      try { if (bannerWrapEl && !bannerWrapEl.classList.contains('hidden')) { hideBanner(); return; } } catch (_) {}
+    }
+  });
+}
 
 // --- initialization: ensure DOM-ready setup (defensive) ---
 function init() {
@@ -899,22 +669,23 @@ function init() {
     if (!gridEl) gridEl = document.getElementById('gameGrid') || document.querySelector('.game-grid');
 
     // Start preloading brand assets + sounds (harmless if already started)
-    try { preloadBrandAssets(); } catch (_) {}
-    try { preloadSounds(); } catch (_) {}
+    try { if (window.Assets && typeof Assets.preloadBrandAssets === 'function') Assets.preloadBrandAssets(); } catch (_) {}
+    try { if (window.Assets && typeof Assets.preloadSounds === 'function') Assets.preloadSounds(); } catch (_) {}
 
     // Wire the HUD sound toggle defensively (id may or may not exist)
     try {
       const btn = document.getElementById('soundToggle');
       if (btn && !btn.__cw_wired) {
-        btn.setAttribute('aria-pressed', String(!soundEnabled));
-        btn.textContent = soundEnabled ? '🔊' : '🔈';
+        const enabled = (window.Assets && Assets.soundEnabled) ? true : false;
+        btn.setAttribute('aria-pressed', String(!enabled));
+        btn.textContent = enabled ? '🔊' : '🔈';
         btn.addEventListener('click', (e) => {
           e?.preventDefault();
-          soundEnabled = !soundEnabled;
-          btn.setAttribute('aria-pressed', String(!soundEnabled));
-          btn.textContent = soundEnabled ? '🔊' : '🔈';
+          // toggle in Assets
+          const newState = window.Assets ? Assets.toggleSound() : true;
+          btn.setAttribute('aria-pressed', String(!newState));
+          btn.textContent = newState ? '🔊' : '🔈';
         });
-        // mark wired so we don't attach twice
         btn.__cw_wired = true;
       }
     } catch (_) { /* ignore */ }
@@ -929,6 +700,9 @@ function init() {
 
     // Start banner auto-hide timer (safe to call even if already scheduled)
     try { startBannerAutoHide(); } catch (_) { /* ignore */ }
+
+    // wire all UI events (replay, reset, difficulty, banner, overlay, keyboard)
+    try { initEvents(); } catch (_) { /* ignore */ }
 
     // Update HUD to reflect current state
     try { updateHUD(); } catch (_) { /* ignore */ }
