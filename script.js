@@ -261,13 +261,7 @@ function startGame() {
 
 function initEvents() {
   // replay / end-panel controls
-  const replayBtnEl = document.getElementById('replayBtn');
   const closeEndBtn = document.getElementById('closeEndBtn');
-  replayBtnEl?.addEventListener('click', () => {
-    overlayHide();
-    hideBanner();
-    setTimeout(startGame, 140);
-  });
   closeEndBtn?.addEventListener('click', (e) => { e?.preventDefault(); overlayHide(); });
 
   // keyboard: removed starting the game via Space to ensure timer only runs when PLAY clicked
