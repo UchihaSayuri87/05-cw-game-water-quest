@@ -258,7 +258,53 @@ function startGame() {
 	}
 }
 
-// replace endGame to show overlay only for wins; show a brief non-modal message for losses
+function initEvents() {
+  // replay / end-panel controls
+  const replayBtnEl = document.getElementById('replayBtn');
+  const closeEndBtn = document.getElementById('closeEndBtn');
+  replayBtnEl?.addEventListener('click', () => {
+    overlayHide();
+    hideBanner();
+    setTimeout(startGame, 140);
+  });
+  closeEndBtn?.addEventListener('click', (e) => { e?.preventDefault(); overlayHide(); });
+
+  // keyboard: removed starting the game via Space to ensure timer only runs when PLAY clicked
+  // (no global Space -> start handler here)
+
+  // banner handlers
+  bannerPlayEl?.addEventListener('click', (e) => { e?.preventDefault(); hideBanner(); startGame(); });
+  bannerCloseEl?.addEventListener('click', (e) => { e?.preventDefault(); if (bannerWrapEl) bannerWrapEl.classList.add('hidden'); });
+
+  // reset and difficulty select
+  const resetBtn = document.getElementById('resetBtn');
+  const difficultySelect = document.getElementById('difficultySelect');
+  resetBtn?.addEventListener('click', () => {
+    // clear timers/state first for cleanliness then reload
+    try { stopConfetti(); } catch (_) {}
+    try { clearTimeout(popTimer); popTimer = null; } catch (_) {}
+    try { clearInterval(countdownTimer); countdownTimer = null; } catch (_) {}
+    location.reload();
+  });
+  difficultySelect?.addEventListener('change', (e) => {
+    const val = (e.target && e.target.value) || 'normal';
+    setDifficulty(val);
+    if (running) { clearTimeout(popTimer); popTimer = null; scheduleNextPop(); }
+  });
+
+  // overlay backdrop click to close
+  overlay?.addEventListener('pointerdown', (e) => { if (e.target === overlay) overlayHide(); });
+
+  // Escape handlers: close overlay or dismiss banner
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      if (overlay && !overlay.classList.contains('hidden')) { overlayHide(); return; }
+      try { if (bannerWrapEl && !bannerWrapEl.classList.contains('hidden')) { hideBanner(); return; } } catch (_) {}
+    }
+  });
+}
+
+// replace endGame to show overlay only for wins; hide overlay on loss and show brief achievement
 function endGame() {
 	// stop running state and timers
 	running = false;
@@ -268,9 +314,10 @@ function endGame() {
 	// clear visible pops
 	clearAllPops();
 
-	// show results in endPanel using overlay helpers (only for wins)
+	// update score in end panel (kept for reference)
 	if (finalScore) finalScore.textContent = score;
 
+	// choose message based on win/lose
 	const isWin = score >= WIN_THRESHOLD;
 	const pool = isWin ? winMessages : loseMessages;
 	const msg = pool[Math.floor(Math.random() * pool.length)];
@@ -285,9 +332,10 @@ function endGame() {
 	if (isWin) {
 		if (endPanelEl) overlayShow(endPanelEl);
 	} else {
-		// on loss: show a short achievement message instead of the modal "try again" window
+		// on loss: ensure any overlay/backdrop is hidden and show a short achievement message
+		try { overlayHide(); } catch (_) { /* ignore */ }
 		showAchievement(msg, 1600);
-		// update finalScore/result elements but don't open the overlay
+		// keep end panel hidden for clarity
 		if (endPanelEl) {
 			endPanelEl.classList.add('hidden');
 			endPanelEl.setAttribute('aria-hidden', 'true');
