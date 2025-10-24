@@ -258,7 +258,7 @@ function startGame() {
 	}
 }
 
-// replace endGame to use overlayShow for accessibility (merge in place of prior endGame)
+// replace endGame to show overlay only for wins; show a brief non-modal message for losses
 function endGame() {
 	// stop running state and timers
 	running = false;
@@ -268,22 +268,31 @@ function endGame() {
 	// clear visible pops
 	clearAllPops();
 
-	// show results in endPanel using overlay helpers
+	// show results in endPanel using overlay helpers (only for wins)
 	if (finalScore) finalScore.textContent = score;
 
-	// explicitly show "win" only when score >= WIN_THRESHOLD, "try again" only when < WIN_THRESHOLD
 	const isWin = score >= WIN_THRESHOLD;
 	const pool = isWin ? winMessages : loseMessages;
 	const msg = pool[Math.floor(Math.random() * pool.length)];
-	if (resultTitle) resultTitle.textContent = isWin ? 'You win!' : (score < WIN_THRESHOLD ? 'Try again' : '');
+	if (resultTitle) resultTitle.textContent = isWin ? 'You win!' : '';
 	if (resultMessage) resultMessage.textContent = msg;
 
 	// play win sound for winners (non-blocking)
 	if (isWin && window.Assets && typeof Assets.playSound === 'function') Assets.playSound('win');
 
-	// show overlay end panel via helper (endPanel exists in DOM)
+	// show overlay end panel only for wins
 	const endPanelEl = document.getElementById('endPanel');
-	if (endPanelEl) overlayShow(endPanelEl);
+	if (isWin) {
+		if (endPanelEl) overlayShow(endPanelEl);
+	} else {
+		// on loss: show a short achievement message instead of the modal "try again" window
+		showAchievement(msg, 1600);
+		// update finalScore/result elements but don't open the overlay
+		if (endPanelEl) {
+			endPanelEl.classList.add('hidden');
+			endPanelEl.setAttribute('aria-hidden', 'true');
+		}
+	}
 
 	// confetti for notable achievements:
 	if (peakScore >= 10 && score >= 10) {
