@@ -94,6 +94,72 @@ body, p, .tagline, .score, .timer, .achievement {
 }
 .banner-play:hover{ transform:translateY(-3px); box-shadow:0 18px 40px rgba(0,174,239,0.16); }
 
+/* Hero image variant (uses external image file rather than embedding) */
+.banner-wrapper.hero-image {
+  background-image: url("img/hero-guide.jpg");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  color: #ffffff; /* text over image should be white */
+  /* keep padding but allow larger visual impact */
+  padding: clamp(28px, 8vw, 72px);
+  border-radius: 12px;
+  box-shadow: 0 20px 60px rgba(2,6,23,0.12);
+}
+
+/* Ensure fallback content sits on top of the image and is readable */
+.banner-wrapper.hero-image .banner-hero {
+  background: rgba(0,0,0,0.0); /* transparent, image is background */
+  text-align: center;
+  color: #fff;
+  gap: 20px;
+}
+
+/* Strong white stacked hero title like the guide */
+.banner-wrapper.hero-image .hero-title {
+  color: #ffffff;
+  font-weight: 900;
+  font-size: clamp(32px, 8vw, 88px);
+  line-height: 0.95;
+  text-transform: uppercase;
+  letter-spacing: -0.02em;
+  text-shadow: 0 6px 18px rgba(4,20,30,0.28);
+  margin: 0;
+}
+
+/* Prominent blue PLAY pill matching the guide */
+.banner-wrapper.hero-image .banner-play {
+  background: #0B79D0; /* richer blue for higher contrast on yellow */
+  color: #fff;
+  padding: 16px 56px;
+  font-size: clamp(16px, 3vw, 26px);
+  border-radius: 999px;
+  box-shadow: 0 16px 34px rgba(11,121,208,0.22);
+  border: none;
+  transition: transform 160ms ease, box-shadow 160ms ease;
+}
+.banner-wrapper.hero-image .banner-play:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 22px 46px rgba(11,121,208,0.28);
+}
+
+/* Make the hero subcopy (tagline) subtle but readable */
+.banner-wrapper.hero-image .tagline {
+  color: rgba(255,255,255,0.95);
+  font-size: clamp(14px, 2.6vw, 18px);
+  margin: 0;
+  text-shadow: 0 6px 18px rgba(4,20,30,0.18);
+}
+
+/* Reduce the visual weight of the inline brand imgs when the hero image is used */
+.banner-wrapper.hero-image .brand-square,
+.banner-wrapper.hero-image .brand-horizontal,
+.banner-wrapper.hero-image #logoImg,
+.banner-wrapper.hero-image #jerryBrand {
+  filter: drop-shadow(0 8px 18px rgba(0,0,0,0.28));
+  opacity: 0.98;
+}
+
 /* HUD */
 .hud{ display:flex; gap:12px; align-items:center; justify-content:space-between; width:100%; }
 .hud > div{ display:flex; gap:8px; align-items:center; }
