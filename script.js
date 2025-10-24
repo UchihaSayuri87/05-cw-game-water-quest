@@ -892,57 +892,56 @@ document.addEventListener('keydown', (e) => {
   }
 });
 
-// --- initialization: preload sounds + wire HUD sound toggle ---
-(function _initUI() {
-  // start loading audio assets (defensive)
-  try { preloadSounds(); } catch (_) { /* ignore */ }
-
-  // wire the HUD sound toggle (button exists in index.html)
+// --- initialization: ensure DOM-ready setup (defensive) ---
+function init() {
   try {
-    const soundToggleBtn = document.getElementById('soundToggle');
-    if (soundToggleBtn) {
-      soundToggleBtn.setAttribute('aria-pressed', String(!soundEnabled));
-      soundToggleBtn.textContent = soundEnabled ? '🔊' : '🔈';
-      soundToggleBtn.addEventListener('click', (e) => {
-        e?.preventDefault();
-        soundEnabled = !soundEnabled;
-        soundToggleBtn.setAttribute('aria-pressed', String(!soundEnabled));
-        soundToggleBtn.textContent = soundEnabled ? '🔊' : '🔈';
-      });
-    }
+    // Ensure grid reference (in case script executed before DOM ready)
+    if (!gridEl) gridEl = document.getElementById('gameGrid') || document.querySelector('.game-grid');
 
-    // accessibility: focus Play so keyboard users can start quickly
+    // Start preloading brand assets + sounds (harmless if already started)
+    try { preloadBrandAssets(); } catch (_) {}
+    try { preloadSounds(); } catch (_) {}
+
+    // Wire the HUD sound toggle defensively (id may or may not exist)
+    try {
+      const btn = document.getElementById('soundToggle');
+      if (btn && !btn.__cw_wired) {
+        btn.setAttribute('aria-pressed', String(!soundEnabled));
+        btn.textContent = soundEnabled ? '🔊' : '🔈';
+        btn.addEventListener('click', (e) => {
+          e?.preventDefault();
+          soundEnabled = !soundEnabled;
+          btn.setAttribute('aria-pressed', String(!soundEnabled));
+          btn.textContent = soundEnabled ? '🔊' : '🔈';
+        });
+        // mark wired so we don't attach twice
+        btn.__cw_wired = true;
+      }
+    } catch (_) { /* ignore */ }
+
+    // Focus the Play button for keyboard users if present
     try {
       if (bannerPlayEl && typeof bannerPlayEl.focus === 'function') {
         bannerPlayEl.setAttribute('aria-label', bannerPlayEl.getAttribute('aria-label') || 'Play Water Quest');
         bannerPlayEl.focus();
       }
-    } catch (_) { /* ignore focus errors */ }
+    } catch (_) { /* ignore */ }
 
-  } catch (_) { /* ignore UI wiring failures */ }
-})();
+    // Start banner auto-hide timer (safe to call even if already scheduled)
+    try { startBannerAutoHide(); } catch (_) { /* ignore */ }
 
-// Cleanup timers and background work when the page is unloaded/hidden.
-// This prevents timers from running after navigating away and stops audio/confetti.
-window.addEventListener('pagehide', () => {
-  try {
-    clearTimeout(popTimer); popTimer = null;
-    clearInterval(countdownTimer); countdownTimer = null;
-    if (bannerAutoHideTimer) { clearTimeout(bannerAutoHideTimer); bannerAutoHideTimer = null; }
-    stopConfetti();
-  } catch (_) { /* ignore */ }
-});
+    // Update HUD to reflect current state
+    try { updateHUD(); } catch (_) { /* ignore */ }
+  } catch (_) { /* final defensive catch */ }
+}
 
-// ensure beforeunload also clears timers in addition to saving state
-window.addEventListener('beforeunload', (e) => {
-  try {
-    saveState();
-    clearTimeout(popTimer); popTimer = null;
-    clearInterval(countdownTimer); countdownTimer = null;
-    if (bannerAutoHideTimer) { clearTimeout(bannerAutoHideTimer); bannerAutoHideTimer = null; }
-    try { stopConfetti(); } catch (_) {}
-  } catch (_) { /* ignore */ }
-});
+// Run init after DOM is ready
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', init, { once: true });
+} else {
+  // already ready
+  init();
+}
 
 // Ensure initial HUD reflects defaults
 updateHUD();
