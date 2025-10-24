@@ -4,8 +4,9 @@
 // - playSound(name): non-blocking playback (clones audio nodes so overlap works)
 // - toggleSound() / setSoundEnabled(flag) to update enabled state
 (function () {
-  // Try these folders for audio files (order matters)
-  const AUDIO_FOLDERS = ['sound', 'sounds'];
+  // Try these folders for audio files (order matters).
+  // Prefer absolute '/sounds' (common host path), then '/sound', then relative folders.
+  const AUDIO_FOLDERS = ['/sounds', '/sound', 'sounds', 'sound'];
 
   // filenames (without folder)
   const SOUND_FILES = {

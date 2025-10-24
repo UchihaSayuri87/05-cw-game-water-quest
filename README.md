@@ -45,3 +45,8 @@ These are the minimum requirements, but if you'd like an additional challenge go
 
 If you have any questions or need any assistance with your code, reach out to the HelpHub or attend a Drop-In Hour. You got this!!
 
+## Notes about audio assets
+- Place the game's audio files (pop.mp3, bad.mp3, start.mp3, win.mp3) in either a "sounds/" or "sound/" folder at the project root.
+- The runtime loader (assets.js) will try absolute paths first (/sounds, /sound) and then relative folders (sounds, sound), so either layout will work.
+- If you still see 404s in DevTools, confirm the exact filenames and folder and update AUDIO_FOLDERS in assets.js to include the correct folder name.
+
