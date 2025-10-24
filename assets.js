@@ -4,10 +4,10 @@
 // - playSound(name): non-blocking playback (clones audio nodes so overlap works)
 // - toggleSound() / setSoundEnabled(flag) to update enabled state
 (function () {
-  // candidate folders to try for audio files (tries both singular and plural)
+  // Try these folders for audio files (order matters)
   const AUDIO_FOLDERS = ['sound', 'sounds'];
 
-  // logical filenames (no folder)
+  // filenames (without folder)
   const SOUND_FILES = {
     pop:  'pop.mp3',
     bad:  'bad.mp3',
@@ -18,25 +18,18 @@
   const sounds = {}; // key -> Audio or null
   let soundEnabled = true;
 
-  // helper: try to load a single audio with fallback folders
-  function _loadAudioWithFallbacks(relName, callback) {
-    let tried = 0;
+  // Attempt loading a single audio, trying each folder until one succeeds
+  function _loadAudioWithFallbacks(filename, cb) {
+    let i = 0;
     function tryNext() {
-      if (tried >= AUDIO_FOLDERS.length) {
-        callback(null);
-        return;
-      }
-      const path = AUDIO_FOLDERS[tried] + '/' + relName;
-      tried++;
+      if (i >= AUDIO_FOLDERS.length) { cb(null); return; }
+      const url = AUDIO_FOLDERS[i++] + '/' + filename;
       try {
-        const audio = new Audio(path);
+        const audio = new Audio(url);
         audio.preload = 'auto';
         audio.volume = 0.9;
-        // success
-        audio.addEventListener('canplaythrough', () => { callback(audio); }, { once: true });
-        // error -> try next folder
-        audio.addEventListener('error', () => { tryNext(); }, { once: true });
-        // begin loading
+        audio.addEventListener('canplaythrough', () => cb(audio), { once: true });
+        audio.addEventListener('error', () => tryNext(), { once: true });
         audio.load();
       } catch (e) {
         tryNext();
@@ -47,13 +40,10 @@
 
   function preloadSounds() {
     Object.keys(SOUND_FILES).forEach(key => {
+      sounds[key] = null;
       try {
-        // set a temporary null until we know result
-        sounds[key] = null;
-        _loadAudioWithFallbacks(SOUND_FILES[key], (audio) => {
-          sounds[key] = audio;
-        });
-      } catch (e) {
+        _loadAudioWithFallbacks(SOUND_FILES[key], (audio) => { sounds[key] = audio || null; });
+      } catch (_) {
         sounds[key] = null;
       }
     });
@@ -67,7 +57,7 @@
       const node = src.cloneNode();
       node.volume = src.volume ?? 0.9;
       node.play().catch(() => {});
-    } catch (e) { /* ignore */ }
+    } catch (_) { /* ignore */ }
   }
 
   function setSoundEnabled(flag) { soundEnabled = !!flag; }
@@ -91,8 +81,8 @@
       assets.forEach(({ src, missingClass }) => {
         html.classList.remove(missingClass);
         const img = new Image();
-        img.onload = () => { html.classList.remove(missingClass); };
-        img.onerror = () => { html.classList.add(missingClass); };
+        img.onload = () => html.classList.remove(missingClass);
+        img.onerror = () => html.classList.add(missingClass);
         img.src = src;
       });
     } catch (_) { /* ignore */ }
@@ -104,7 +94,7 @@
   const WATER_CAN_URI = 'data:image/svg+xml;utf8,' + encodeURIComponent(_WATER_CAN_SVG);
   const DIRTY_CAN_URI = 'data:image/svg+xml;utf8,' + encodeURIComponent(_DIRTY_CAN_SVG);
 
-  // expose global Assets
+  // Expose Assets API
   window.Assets = {
     preloadSounds,
     preloadBrandAssets,
@@ -115,6 +105,7 @@
     WATER_CAN_URI,
     DIRTY_CAN_URI,
     sounds,
-    SOUND_FILES
+    SOUND_FILES,
+    AUDIO_FOLDERS
   };
 })();
