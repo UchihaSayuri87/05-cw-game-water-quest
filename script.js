@@ -514,6 +514,10 @@ function init() {
 
     // Update HUD to reflect current state
     try { updateHUD(); } catch (_) { /* ignore */ }
+
+    // ensure overlays are hidden at startup (clear any stray modal/backdrop state)
+    try { overlayHide(); } catch (_) { /* ignore */ }
+
   } catch (_) { /* final defensive catch */ }
 }
 

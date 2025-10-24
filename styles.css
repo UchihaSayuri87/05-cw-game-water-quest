@@ -135,6 +135,17 @@ body, p, .tagline, .score, .timer, .achievement {
 .overlay .overlay-content{ background:#fff; padding:24px; border-radius:10px; max-width:680px; width:min(680px,92%); max-height:calc(100vh - 120px); overflow:auto; -webkit-overflow-scrolling:touch; box-shadow:0 8px 30px rgba(0,0,0,0.18); }
 .overlay .overlay-content h2{ color:var(--cw-blue); margin:0 0 8px; }
 
+/* Utility: hide helper used by scripts to toggle visibility */
+.hidden {
+  display: none !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+
+/* Ensure overlay panels with .hidden stay visually removed (extra guard) */
+.overlay.hidden { display: none !important; }
+.overlay .overlay-content.hidden { display: none !important; }
+
 /* CTA and misc */
 .splash-btn{ background:transparent; color:var(--cw-blue); border:2px solid rgba(0,174,239,0.12); padding:10px 16px; border-radius:999px; font-weight:700; }
 .splash-btn:hover{ background:rgba(0,174,239,0.06); transform:translateY(-2px); }
