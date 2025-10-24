@@ -608,3 +608,128 @@ if (document.readyState === 'loading') {
 
 // Ensure initial HUD reflects defaults
 updateHUD();
+
+// --- lightweight modal helpers: focus trap + inert fallback ---
+let _focusTrapListener = null;
+let _previouslyFocused = null;
+let _wasRunningBeforeModal = false;
+const _appRegions = () => document.querySelectorAll('.brand-strip, .banner-wrapper, main, .hud, .cta-wrap, .game-field');
+
+function _applyInert(el, inert) {
+  if (!el) return;
+  try {
+    if ('inert' in el) { el.inert = inert; return; }
+  } catch (_) {}
+  if (inert) el.setAttribute('aria-hidden', 'true');
+  else el.removeAttribute('aria-hidden');
+
+  const focusable = Array.from(el.querySelectorAll('a[href], button:not([disabled]), textarea, input, select, [tabindex]'))
+    .filter(n => n.getAttribute('tabindex') !== '-1');
+  focusable.forEach(node => {
+    if (inert) {
+      if (!node.hasAttribute('data-prev-tabindex')) node.setAttribute('data-prev-tabindex', node.getAttribute('tabindex') || '');
+      node.setAttribute('tabindex', '-1');
+    } else {
+      if (node.hasAttribute('data-prev-tabindex')) {
+        const prev = node.getAttribute('data-prev-tabindex');
+        if (prev === '') node.removeAttribute('tabindex'); else node.setAttribute('tabindex', prev);
+        node.removeAttribute('data-prev-tabindex');
+      } else {
+        node.removeAttribute('tabindex');
+      }
+    }
+  });
+}
+
+function _getFocusable(container) {
+  if (!container) return [];
+  return Array.from(container.querySelectorAll('a[href], button:not([disabled]), textarea, input, select, [tabindex]:not([tabindex="-1"])'))
+    .filter(el => el.offsetParent !== null);
+}
+
+function _trapFocus(container) {
+  const focusables = _getFocusable(container);
+  if (!focusables.length) return;
+  const first = focusables[0];
+  const last = focusables[focusables.length - 1];
+  try { first.focus(); } catch (_) {}
+
+  _focusTrapListener = (e) => {
+    if (e.key !== 'Tab') return;
+    if (e.shiftKey) {
+      if (document.activeElement === first) { e.preventDefault(); last.focus(); }
+    } else {
+      if (document.activeElement === last) { e.preventDefault(); first.focus(); }
+    }
+  };
+  document.addEventListener('keydown', _focusTrapListener);
+}
+
+function _releaseFocusTrap() {
+  if (_focusTrapListener) {
+    document.removeEventListener('keydown', _focusTrapListener);
+    _focusTrapListener = null;
+  }
+}
+
+function _pauseGameForModal() {
+  _wasRunningBeforeModal = running;
+  if (!running) return;
+  clearTimeout(popTimer); popTimer = null;
+  clearInterval(countdownTimer); countdownTimer = null;
+  running = false;
+}
+
+function _resumeGameFromModal() {
+  if (!_wasRunningBeforeModal) return;
+  _wasRunningBeforeModal = false;
+  running = true;
+  // resume countdown without resetting remaining time
+  startCountdown(false);
+  scheduleNextPop();
+}
+
+function overlayShow(panelEl) {
+  if (!overlay || !panelEl) return;
+  _previouslyFocused = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+
+  overlay.classList.remove('hidden');
+  overlay.setAttribute('aria-hidden', 'false');
+
+  Array.from(overlay.querySelectorAll('.overlay-content')).forEach(p => p.classList.add('hidden'));
+  panelEl.classList.remove('hidden');
+  panelEl.removeAttribute('aria-hidden');
+
+  _trapFocus(panelEl);
+  try {
+    const firstBtn = panelEl.querySelector('button, [role="button"], [tabindex]:not([tabindex="-1"])');
+    if (firstBtn && typeof firstBtn.focus === 'function') firstBtn.focus();
+  } catch (_) {}
+
+  _pauseGameForModal();
+
+  _appRegions().forEach(el => { try { _applyInert(el, true); } catch (_) {} });
+}
+
+function overlayHide() {
+  if (!overlay) return;
+
+  _releaseFocusTrap();
+
+  if (_previouslyFocused) {
+    try {
+      if (document.contains(_previouslyFocused) && _previouslyFocused.offsetParent !== null) _previouslyFocused.focus();
+    } catch (_) {}
+    _previouslyFocused = null;
+  } else {
+    try { const active = document.activeElement; if (overlay.contains(active) && active instanceof HTMLElement) active.blur(); } catch (_) {}
+  }
+
+  overlay.classList.add('hidden');
+  overlay.setAttribute('aria-hidden', 'true');
+  Array.from(overlay.querySelectorAll('.overlay-content')).forEach(p => { p.classList.add('hidden'); p.setAttribute('aria-hidden', 'true'); });
+
+  _appRegions().forEach(el => { try { _applyInert(el, false); } catch (_) {} });
+
+  _resumeGameFromModal();
+}
