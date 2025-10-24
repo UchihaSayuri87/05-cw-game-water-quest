@@ -137,6 +137,8 @@ function createCan(isBad) {
 	} else {
 		can.style.backgroundImage = `url("${(window.Assets && Assets.WATER_CAN_URI) || ''}")`;
 		can.innerHTML = '';
+		// mark as clean so CSS can style pure visuals
+		can.classList.add('clean');
 	}
 
 	wrapper.appendChild(can);
