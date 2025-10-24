@@ -2,7 +2,6 @@
 
 // Whack-a-mole style game with jerry cans and obstacles.
 
-const replayBtn = document.getElementById('replayBtn');
 const scoreEl = document.getElementById('score');
 const timeEl = document.getElementById('time');
 let gridEl = document.getElementById('gameGrid');
